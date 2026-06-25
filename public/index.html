@@ -235,7 +235,6 @@
             const tokenFromUrl = urlParams.get('access_token');
             
             if (tokenFromUrl) {
-                console.log('🔑 Токен найден в URL!');
                 accessToken = tokenFromUrl;
                 localStorage.setItem('spotify_token', accessToken);
                 window.history.replaceState({}, document.title, window.location.pathname);
@@ -246,14 +245,12 @@
             
             const savedToken = localStorage.getItem('spotify_token');
             if (savedToken) {
-                console.log('🔑 Токен найден в localStorage!');
                 accessToken = savedToken;
                 updateStatus('✅ Авторизован (кеш)', 'success');
                 loadUserPlaylists();
                 return true;
             }
             
-            console.log('❌ Токен не найден');
             updateStatus('🔑 Войди в Spotify', '');
             return false;
         }
@@ -328,13 +325,8 @@
             resultsContainer.innerHTML = `<div class="loading">⏳ Ищем...</div>`;
 
             try {
-                const url = `/api/search?q=${encodeURIComponent(query)}`;
-                console.log('🔍 Отправляем запрос:', url);
-                
-                const response = await fetch(url);
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
-
-                console.log('📦 Ответ сервера:', data);
 
                 if (data.error) {
                     if (data.error === 'Нет токена') {
@@ -357,7 +349,7 @@
                     resultsContainer.innerHTML = `<div class="empty-state">😢 Ничего не найдено</div>`;
                 }
             } catch (error) {
-                console.error('❌ Ошибка поиска:', error);
+                console.error('Ошибка:', error);
                 resultsContainer.innerHTML = `<div class="empty-state">❌ Ошибка поиска</div>`;
             }
         }
