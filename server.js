@@ -82,7 +82,7 @@ app.get('/api/token', async (req, res) => {
 });
 
 // ==================================================
-// 4. ПОИСК — АБСОЛЮТНО РАБОЧИЙ
+// 4. ПОИСК
 // ==================================================
 app.get('/api/search', async (req, res) => {
   const query = req.query.q;
@@ -90,10 +90,7 @@ app.get('/api/search', async (req, res) => {
     return res.status(400).json({ error: 'Нет запроса' });
   }
 
-  console.log('🔍 Ищем:', query);
-
   try {
-    // Обновляем токен если нужно
     if (!accessToken || Date.now() > tokenExpirationTime) {
       if (refreshToken) {
         const data = await spotifyApi.refreshAccessToken();
@@ -105,14 +102,11 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
-    // Правильный запрос к Spotify API с limit
     const response = await fetch(
       `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`,
       {
-        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${accessToken}`
         }
       }
     );
@@ -120,18 +114,9 @@ app.get('/api/search', async (req, res) => {
     const data = await response.json();
 
     if (data.error) {
-      console.error('❌ Ошибка Spotify:', data.error);
-      return res.status(data.error.status || 500).json({ 
-        error: data.error.message,
-        status: data.error.status 
-      });
+      return res.status(data.error.status || 500).json({ error: data.error.message });
     }
 
-    if (!data.tracks || !data.tracks.items || data.tracks.items.length === 0) {
-      return res.json({ tracks: { items: [] } });
-    }
-
-    console.log(`✅ Найдено ${data.tracks.items.length} треков`);
     res.json(data);
   } catch (error) {
     console.error('❌ Ошибка поиска:', error);
