@@ -1,19 +1,14 @@
 const express = require('express');
 const SpotifyWebApi = require('spotify-web-api-node');
-const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
-app.use(express.static('public'));
-
-// ========================================
-// НАСТРОЙКА SPOTIFY
-// ========================================
+// ==================================================
+// 1. НАСТРОЙКА SPOTIFY
+// ==================================================
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
@@ -24,9 +19,9 @@ let accessToken = null;
 let refreshToken = null;
 let tokenExpirationTime = null;
 
-// ========================================
-// 1. ЛОГИН
-// ========================================
+// ==================================================
+// 2. ЛОГИН (отправляем пользователя в Spotify)
+// ==================================================
 app.get('/login', (req, res) => {
   const scopes = [
     'user-read-private',
@@ -36,13 +31,14 @@ app.get('/login', (req, res) => {
     'user-read-playback-state',
     'playlist-read-private',
   ];
+  // ВАЖНО: используем response_type=code
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes, 'state');
   res.redirect(authorizeURL);
 });
 
-// ========================================
-// 2. КОЛБЭК
-// ========================================
+// ==================================================
+// 3. КОЛБЭК (Spotify возвращает код, мы обмениваем на токен)
+// ==================================================
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
   if (!code) {
@@ -50,6 +46,7 @@ app.get('/callback', async (req, res) => {
   }
 
   try {
+    // Обмениваем code на access_token
     const data = await spotifyApi.authorizationCodeGrant(code);
     accessToken = data.body['access_token'];
     refreshToken = data.body['refresh_token'];
@@ -59,16 +56,17 @@ app.get('/callback', async (req, res) => {
     spotifyApi.setRefreshToken(refreshToken);
 
     console.log('✅ Авторизация успешна!');
+    // Редирект на главную с токеном
     res.redirect(`/?access_token=${accessToken}`);
   } catch (error) {
-    console.error('❌ Ошибка:', error);
+    console.error('❌ Ошибка авторизации:', error);
     res.status(500).send('Ошибка авторизации');
   }
 });
 
-// ========================================
-// 3. ПОЛУЧИТЬ ТОКЕН
-// ========================================
+// ==================================================
+// 4. API — отдаём токен фронтенду
+// ==================================================
 app.get('/api/token', async (req, res) => {
   try {
     if (accessToken && Date.now() < tokenExpirationTime) {
@@ -85,17 +83,23 @@ app.get('/api/token', async (req, res) => {
 
     return res.status(401).json({ error: 'Нет токена' });
   } catch (error) {
+    console.error('❌ Ошибка:', error);
     res.status(500).json({ error: 'Ошибка сервера' });
   }
 });
 
-// ========================================
-// 4. ГЛАВНАЯ
-// ========================================
+// ==================================================
+// 5. СТАТИКА (раздаём index.html)
+// ==================================================
+app.use(express.static('public'));
+
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// ==================================================
+// 6. ЗАПУСК
+// ==================================================
 app.listen(PORT, () => {
   console.log('');
   console.log('🩸 ========================================');
