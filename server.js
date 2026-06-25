@@ -3,14 +3,11 @@ const SpotifyWebApi = require('spotify-web-api-node');
 const path = require('path');
 require('dotenv').config();
 
-// ==================================================
-// 1. ИНИЦИАЛИЗАЦИЯ
-// ==================================================
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ==================================================
-// 2. НАСТРОЙКА SPOTIFY
+// НАСТРОЙКА SPOTIFY
 // ==================================================
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.CLIENT_ID,
@@ -23,59 +20,49 @@ let refreshToken = null;
 let tokenExpirationTime = null;
 
 // ==================================================
-// 3. СТАТИКА (раздаём public папку)
+// СТАТИКА
 // ==================================================
 app.use(express.static('public'));
 
 // ==================================================
-// 4. ЛОГИН (отправляем пользователя в Spotify)
+// ЛОГИН
 // ==================================================
 app.get('/login', (req, res) => {
-  const scopes = [
-    'user-read-private',
-    'user-read-email',
-    'playlist-read-private',
-    'playlist-read-collaborative'
-  ];
+  const scopes = ['user-read-private', 'user-read-email', 'playlist-read-private'];
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes, 'state');
   res.redirect(authorizeURL);
 });
 
 // ==================================================
-// 5. КОЛБЭК (Spotify возвращает код, мы обмениваем на токен)
+// КОЛБЭК
 // ==================================================
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
-  if (!code) {
-    return res.status(400).send('❌ Код не найден!');
-  }
+  if (!code) return res.status(400).send('❌ Код не найден!');
 
   try {
     const data = await spotifyApi.authorizationCodeGrant(code);
     accessToken = data.body['access_token'];
     refreshToken = data.body['refresh_token'];
     tokenExpirationTime = Date.now() + data.body['expires_in'] * 1000;
-
     spotifyApi.setAccessToken(accessToken);
     spotifyApi.setRefreshToken(refreshToken);
-
     console.log('✅ Авторизация успешна!');
     res.redirect(`/?access_token=${accessToken}`);
   } catch (error) {
-    console.error('❌ Ошибка авторизации:', error);
+    console.error('❌ Ошибка:', error);
     res.status(500).send('Ошибка авторизации');
   }
 });
 
 // ==================================================
-// 6. API — отдаём токен фронтенду
+// ТОКЕН
 // ==================================================
 app.get('/api/token', async (req, res) => {
   try {
     if (accessToken && Date.now() < tokenExpirationTime) {
       return res.json({ accessToken });
     }
-
     if (refreshToken) {
       const data = await spotifyApi.refreshAccessToken();
       accessToken = data.body['access_token'];
@@ -83,25 +70,20 @@ app.get('/api/token', async (req, res) => {
       spotifyApi.setAccessToken(accessToken);
       return res.json({ accessToken });
     }
-
     return res.status(401).json({ error: 'Нет токена' });
   } catch (error) {
-    console.error('❌ Ошибка:', error);
     res.status(500).json({ error: 'Ошибка сервера' });
   }
 });
 
 // ==================================================
-// 7. ПОИСК (через сервер, с токеном)
+// ПОИСК
 // ==================================================
 app.get('/api/search', async (req, res) => {
   const query = req.query.q;
-  if (!query) {
-    return res.status(400).json({ error: 'Нет запроса' });
-  }
+  if (!query) return res.status(400).json({ error: 'Нет запроса' });
 
   try {
-    // Проверяем токен
     if (!accessToken || Date.now() > tokenExpirationTime) {
       if (refreshToken) {
         const data = await spotifyApi.refreshAccessToken();
@@ -113,22 +95,14 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
-    // Делаем запрос к Spotify API
     const response = await fetch(
       `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
-      }
+      { headers: { 'Authorization': `Bearer ${accessToken}` } }
     );
-
     const data = await response.json();
-
     if (data.error) {
       return res.status(data.error.status || 500).json({ error: data.error.message });
     }
-
     res.json(data);
   } catch (error) {
     console.error('❌ Ошибка поиска:', error);
@@ -137,14 +111,14 @@ app.get('/api/search', async (req, res) => {
 });
 
 // ==================================================
-// 8. ГЛАВНАЯ СТРАНИЦА
+// ГЛАВНАЯ
 // ==================================================
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ==================================================
-// 9. ЗАПУСК СЕРВЕРА
+// ЗАПУСК
 // ==================================================
 app.listen(PORT, () => {
   console.log('');
