@@ -193,9 +193,6 @@
     </div>
 
     <script>
-        // =============================================
-        // 1. ТОКЕН
-        // =============================================
         const loginBtn = document.getElementById('loginBtn');
         const statusEl = document.getElementById('status');
         const searchInput = document.getElementById('searchInput');
@@ -207,33 +204,27 @@
         let accessToken = null;
         let playlist = [];
 
-        // Проверяем URL на наличие токена (после редиректа)
+        // =============================================
+        // 1. ТОКЕН
+        // =============================================
         const urlParams = new URLSearchParams(window.location.search);
         const tokenFromUrl = urlParams.get('access_token');
 
         if (tokenFromUrl) {
-            // Сохраняем токен
             accessToken = tokenFromUrl;
             localStorage.setItem('spotify_token', accessToken);
-            // Убираем токен из URL
             window.history.replaceState({}, document.title, window.location.pathname);
             updateStatus('✅ Авторизован', 'success');
             loadUserPlaylists();
         } else {
-            // Проверяем localStorage
             const savedToken = localStorage.getItem('spotify_token');
             if (savedToken) {
                 accessToken = savedToken;
                 updateStatus('✅ Авторизован (кеш)', 'success');
                 loadUserPlaylists();
-            } else {
-                updateStatus('🔑 Войди в Spotify', '');
             }
         }
 
-        // =============================================
-        // 2. СТАТУС
-        // =============================================
         function updateStatus(text, type = '') {
             statusEl.textContent = text;
             statusEl.className = 'status-text';
@@ -251,7 +242,7 @@
         }
 
         // =============================================
-        // 3. ВХОД
+        // 2. ВХОД
         // =============================================
         loginBtn.addEventListener('click', function() {
             if (this.disabled) return;
@@ -259,7 +250,7 @@
         });
 
         // =============================================
-        // 4. ПЛЕЙЛИСТЫ
+        // 3. ПЛЕЙЛИСТЫ
         // =============================================
         async function loadUserPlaylists() {
             if (!accessToken) return;
@@ -303,7 +294,7 @@
         }
 
         // =============================================
-        // 5. ПОИСК
+        // 4. ПОИСК
         // =============================================
         async function searchMusic() {
             const query = searchInput.value.trim();
@@ -350,7 +341,7 @@
         }
 
         // =============================================
-        // 6. ОТРИСОВКА
+        // 5. ОТРИСОВКА
         // =============================================
         function renderTracks(tracks) {
             if (!tracks || tracks.length === 0) {
@@ -378,7 +369,7 @@
         }
 
         // =============================================
-        // 7. ПЛЕЕР
+        // 6. ПЛЕЕР
         // =============================================
         function playTrack(index) {
             if (index < 0 || index >= playlist.length) return;
@@ -391,16 +382,13 @@
         }
 
         // =============================================
-        // 8. ОБРАБОТЧИКИ
+        // 7. ОБРАБОТЧИКИ
         // =============================================
         searchBtn.addEventListener('click', searchMusic);
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') searchMusic();
         });
 
-        // =============================================
-        // 9. АВТОПОИСК
-        // =============================================
         setTimeout(() => {
             if (accessToken) {
                 searchMusic();
@@ -408,7 +396,6 @@
         }, 1000);
 
         console.log('🩸 SWAG ЗАГРУЖЕН!');
-        console.log('🔑 Токен:', accessToken ? 'ЕСТЬ ✅' : 'НЕТ ❌');
     </script>
 
 </body>
