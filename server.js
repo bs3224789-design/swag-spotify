@@ -19,7 +19,7 @@ let tokenExpirationTime = null;
 app.use(express.static('public'));
 
 // ==================================================
-// 1. ЛОГИН — С РАСШИРЕННЫМИ ПРАВАМИ!
+// 1. ЛОГИН
 // ==================================================
 app.get('/login', (req, res) => {
   const scopes = [
@@ -57,10 +57,9 @@ app.get('/callback', async (req, res) => {
     spotifyApi.setRefreshToken(refreshToken);
 
     console.log('✅ Авторизация успешна!');
-    console.log('🔑 Токен:', accessToken.substring(0, 30) + '...');
     res.redirect(`/?access_token=${accessToken}`);
   } catch (error) {
-    console.error('❌ Ошибка авторизации:', error);
+    console.error('❌ Ошибка:', error);
     res.status(500).send('Ошибка авторизации');
   }
 });
@@ -90,13 +89,15 @@ app.get('/api/token', async (req, res) => {
 });
 
 // ==================================================
-// 4. ПОИСК
+// 4. ПОИСК — ИСПРАВЛЕННЫЙ!
 // ==================================================
 app.get('/api/search', async (req, res) => {
   const query = req.query.q;
   if (!query) {
     return res.status(400).json({ error: 'Нет запроса' });
   }
+
+  console.log('🔍 Ищем:', query);
 
   try {
     if (!accessToken || Date.now() > tokenExpirationTime) {
@@ -110,11 +111,14 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
+    // ВАЖНО: добавляем method: 'GET' и Content-Type
     const response = await fetch(
       `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`,
       {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${accessToken}`
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
         }
       }
     );
@@ -122,9 +126,11 @@ app.get('/api/search', async (req, res) => {
     const data = await response.json();
 
     if (data.error) {
+      console.log('❌ Ошибка Spotify:', data.error);
       return res.status(data.error.status || 500).json({ error: data.error.message });
     }
 
+    console.log('✅ Найдено треков:', data.tracks?.items?.length || 0);
     res.json(data);
   } catch (error) {
     console.error('❌ Ошибка поиска:', error);
