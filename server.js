@@ -19,14 +19,20 @@ let tokenExpirationTime = null;
 app.use(express.static('public'));
 
 // ==================================================
-// 1. ЛОГИН
+// 1. ЛОГИН — С РАСШИРЕННЫМИ ПРАВАМИ!
 // ==================================================
 app.get('/login', (req, res) => {
   const scopes = [
     'user-read-private',
     'user-read-email',
     'playlist-read-private',
-    'playlist-read-collaborative'
+    'playlist-read-collaborative',
+    'user-library-read',
+    'user-top-read',
+    'user-read-playback-state',
+    'user-modify-playback-state',
+    'user-read-currently-playing',
+    'streaming'
   ];
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes, 'state');
   res.redirect(authorizeURL);
