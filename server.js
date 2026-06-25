@@ -19,20 +19,21 @@ let tokenExpirationTime = null;
 app.use(express.static('public'));
 
 // ==================================================
-// ЛОГИН
+// 1. ЛОГИН
 // ==================================================
 app.get('/login', (req, res) => {
   const scopes = [
     'user-read-private',
     'user-read-email',
     'playlist-read-private',
+    'playlist-read-collaborative'
   ];
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes, 'state');
   res.redirect(authorizeURL);
 });
 
 // ==================================================
-// КОЛБЭК
+// 2. КОЛБЭК
 // ==================================================
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
@@ -58,7 +59,7 @@ app.get('/callback', async (req, res) => {
 });
 
 // ==================================================
-// ТОКЕН
+// 3. ТОКЕН
 // ==================================================
 app.get('/api/token', async (req, res) => {
   try {
@@ -79,20 +80,30 @@ app.get('/api/token', async (req, res) => {
 });
 
 // ==================================================
-// ПОИСК (ИСПРАВЛЕН!)
+// 4. ПОИСК — ИСПРАВЛЕННЫЙ!
 // ==================================================
 app.get('/api/search', async (req, res) => {
-  console.log('🔍 Получен запрос на поиск:', req.query);
+  console.log('🔍 Входящий запрос:', req.url);
+  console.log('🔍 Параметры:', req.query);
   
-  const query = req.query.q;
+  // Пробуем взять q из разных мест
+  let query = req.query.q;
+  
+  // Если нет q — пробуем взять из query строки вручную
   if (!query) {
-    console.log('❌ Пустой запрос');
-    return res.status(400).json({ error: 'Нет запроса' });
+    const urlParams = new URLSearchParams(req.url.split('?')[1] || '');
+    query = urlParams.get('q');
+  }
+  
+  if (!query) {
+    console.log('❌ Нет параметра q!');
+    return res.status(400).json({ error: 'Нет запроса', received: req.query });
   }
 
-  console.log('✅ Ищем трек:', query);
+  console.log('✅ Ищем:', query);
 
   try {
+    // Проверяем токен
     if (!accessToken || Date.now() > tokenExpirationTime) {
       if (refreshToken) {
         const data = await spotifyApi.refreshAccessToken();
@@ -116,11 +127,11 @@ app.get('/api/search', async (req, res) => {
     const data = await response.json();
 
     if (data.error) {
-      console.log('❌ Ошибка Spotify API:', data.error);
+      console.log('❌ Ошибка Spotify:', data.error);
       return res.status(data.error.status || 500).json({ error: data.error.message });
     }
 
-    console.log('✅ Найдено треков:', data.tracks?.items?.length || 0);
+    console.log('✅ Найдено:', data.tracks?.items?.length || 0);
     res.json(data);
   } catch (error) {
     console.error('❌ Ошибка поиска:', error);
@@ -129,7 +140,7 @@ app.get('/api/search', async (req, res) => {
 });
 
 // ==================================================
-// ГЛАВНАЯ
+// 5. ГЛАВНАЯ
 // ==================================================
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
