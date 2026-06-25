@@ -17,6 +17,7 @@ let refreshToken = null;
 let tokenExpirationTime = null;
 
 app.use(express.static('public'));
+app.use(express.json());
 
 app.get('/login', (req, res) => {
   const scopes = [
@@ -79,13 +80,16 @@ app.get('/api/token', async (req, res) => {
   }
 });
 
-app.get('/api/search', async (req, res) => {
-  const query = req.query.q;
+// =============================================
+// ГЛАВНОЕ: ПОИСК ЧЕРЕЗ POST (так Spotify теперь требует)
+// =============================================
+app.post('/api/search', async (req, res) => {
+  const query = req.body.q || req.query.q;
   if (!query) {
     return res.status(400).json({ error: 'Нет запроса' });
   }
 
-  console.log('🔍 Ищем:', query);
+  console.log('🔍 Ищем (POST):', query);
 
   try {
     if (!accessToken || Date.now() > tokenExpirationTime) {
@@ -99,13 +103,18 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
-    const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`;
-    console.log('📡 Запрос к Spotify:', url);
-
-    const response = await fetch(url, {
+    // POST-запрос к Spotify с телом
+    const response = await fetch('https://api.spotify.com/v1/search', {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        q: query,
+        type: 'track',
+        limit: 20
+      })
     });
 
     const data = await response.json();
