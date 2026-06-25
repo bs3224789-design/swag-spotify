@@ -173,8 +173,7 @@
     <div class="header">
         <div class="logo"><span>SWAG</span></div>
         <div class="header-right">
-            <span class="status-text" id="status">Войди в Spotify</span>
-            <button class="login-btn" id="loginBtn">Войти</button>
+            <span class="status-text" id="status">🎵 Добро пожаловать</span>
         </div>
     </div>
 
@@ -185,7 +184,7 @@
 
     <div class="section-title">Результаты</div>
     <div id="resultsContainer">
-        <div class="empty-state">Войди в Spotify и ищи музыку</div>
+        <div class="empty-state">Введи название и нажми "Найти"</div>
     </div>
 
     <div class="player-wrapper" id="playerWrapper">
@@ -193,109 +192,60 @@
     </div>
 
     <script>
-        const loginBtn = document.getElementById('loginBtn');
-        const statusEl = document.getElementById('status');
+        // =============================================
+        // ДЕМО-ТРЕКИ (работает без Spotify API!)
+        // =============================================
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
         const resultsContainer = document.getElementById('resultsContainer');
         const playerWrapper = document.getElementById('playerWrapper');
         const playerFrame = document.getElementById('playerFrame');
 
-        let accessToken = null;
-        let playlist = [];
+        // БАЗА ДЕМО-ТРЕКОВ (можно добавить любые)
+        const DEMO_TRACKS = [
+            { id: '7wtfhZwyrcc', name: 'Believer', artist: 'Imagine Dragons', cover: '' },
+            { id: 'JGwWNGJdvx8', name: 'Shape of You', artist: 'Ed Sheeran', cover: '' },
+            { id: 'fHI8X4OXluQ', name: 'Blinding Lights', artist: 'The Weeknd', cover: '' },
+            { id: '34Na4j8JIs', name: 'Starboy', artist: 'The Weeknd', cover: '' },
+            { id: 'D71lFSY9A', name: 'Bad Guy', artist: 'Billie Eilish', cover: '' },
+            { id: 'mzB1VGEGcSU', name: 'Lucid Dreams', artist: 'Juice WRLD', cover: '' },
+            { id: '0Ql9ZrJk1gAlYJjBZvP1g', name: 'SAD!', artist: 'XXXTENTACION', cover: '' },
+            { id: '6b8BQ1fR0Gf3GjL1mUv6Rk', name: 'Bohemian Rhapsody', artist: 'Queen', cover: '' }
+        ];
 
-        function updateStatus(text, type = '') {
-            statusEl.textContent = text;
-            statusEl.className = 'status-text';
-            if (type === 'success') statusEl.classList.add('success');
-            if (type === 'error') statusEl.classList.add('error');
-            if (text.includes('Авторизован')) {
-                loginBtn.disabled = true;
-                loginBtn.textContent = '✅ Вход';
-                loginBtn.classList.add('green');
-            } else {
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Войти';
-                loginBtn.classList.remove('green');
-            }
-        }
-
-        function getToken() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tokenFromUrl = urlParams.get('access_token');
-            if (tokenFromUrl) {
-                accessToken = tokenFromUrl;
-                localStorage.setItem('spotify_token', accessToken);
-                window.history.replaceState({}, document.title, window.location.pathname);
-                updateStatus('✅ Авторизован', 'success');
-                return true;
-            }
-            const savedToken = localStorage.getItem('spotify_token');
-            if (savedToken) {
-                accessToken = savedToken;
-                updateStatus('✅ Авторизован (кеш)', 'success');
-                return true;
-            }
-            updateStatus('🔑 Войди в Spotify', '');
-            return false;
-        }
-
-        loginBtn.addEventListener('click', function() {
-            if (this.disabled) return;
-            window.location.href = '/login';
-        });
-
-        async function searchMusic() {
-            const query = searchInput.value.trim();
+        function searchMusic() {
+            const query = searchInput.value.trim().toLowerCase();
             if (!query) {
-                resultsContainer.innerHTML = `<div class="empty-state">Напиши название</div>`;
+                resultsContainer.innerHTML = `<div class="empty-state">Напиши название трека</div>`;
                 return;
             }
-            if (!accessToken) {
-                resultsContainer.innerHTML = `<div class="empty-state">Сначала войди в Spotify</div>`;
+
+            // Фильтруем треки по запросу
+            const filtered = DEMO_TRACKS.filter(track => 
+                track.name.toLowerCase().includes(query) || 
+                track.artist.toLowerCase().includes(query)
+            );
+
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = `<div class="empty-state">😢 Ничего не найдено. Попробуй: "The Weeknd" или "Imagine Dragons"</div>`;
                 return;
             }
-            resultsContainer.innerHTML = `<div class="loading">⏳ Ищем...</div>`;
-            try {
-                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`
-                    }
-                });
-                const data = await response.json();
-                if (data.error) {
-                    resultsContainer.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
-                    return;
-                }
-                if (data.tracks && data.tracks.items && data.tracks.items.length > 0) {
-                    playlist = data.tracks.items;
-                    renderTracks(playlist);
-                } else {
-                    resultsContainer.innerHTML = `<div class="empty-state">😢 Ничего не найдено</div>`;
-                }
-            } catch (error) {
-                console.error('Ошибка поиска:', error);
-                resultsContainer.innerHTML = `<div class="empty-state">❌ Ошибка поиска</div>`;
-            }
+
+            renderTracks(filtered);
         }
 
         function renderTracks(tracks) {
-            if (!tracks || tracks.length === 0) {
-                resultsContainer.innerHTML = `<div class="empty-state">😢 Нет треков</div>`;
-                return;
-            }
             let html = '<div class="results">';
-            tracks.slice(0, 12).forEach((track, index) => {
-                const cover = track.album?.images?.[0]?.url || '';
-                const coverHtml = cover ? `<img src="${cover}">` : '<div class="empty-cover">🎵</div>';
+            tracks.forEach((track) => {
+                const coverHtml = track.cover ? `<img src="${track.cover}">` : '<div class="empty-cover">🎵</div>';
                 html += `
-                    <div class="result-card" onclick="playTrack(${index})">
+                    <div class="result-card" onclick="playTrack('${track.id}', '${track.name}', '${track.artist}')">
                         <div class="cover">
                             ${coverHtml}
                             <div class="play-overlay">▶</div>
                         </div>
                         <div class="title">${track.name}</div>
-                        <div class="artist">${track.artists.map(a => a.name).join(', ')}</div>
+                        <div class="artist">${track.artist}</div>
                     </div>
                 `;
             });
@@ -303,11 +253,12 @@
             resultsContainer.innerHTML = html;
         }
 
-        function playTrack(index) {
-            if (index < 0 || index >= playlist.length) return;
-            const track = playlist[index];
-            if (!track) return;
-            playerFrame.src = `https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0&autoplay=1`;
+        function playTrack(trackId, title, artist) {
+            if (!trackId) {
+                alert('Трек не найден');
+                return;
+            }
+            playerFrame.src = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0&autoplay=1`;
             playerWrapper.style.display = 'block';
             playerWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -317,12 +268,11 @@
             if (e.key === 'Enter') searchMusic();
         });
 
-        const hasToken = getToken();
-        if (hasToken) {
-            setTimeout(() => searchMusic(), 1000);
-        }
+        // Автопоиск при загрузке
+        setTimeout(searchMusic, 500);
 
-        console.log('🩸 SWAG ЗАГРУЖЕН!');
+        console.log('🩸 SWAG (ДЕМО-РЕЖИМ) ЗАГРУЖЕН!');
+        console.log('🎵 Ищет по базе демо-треков (без Spotify API)');
     </script>
 
 </body>
