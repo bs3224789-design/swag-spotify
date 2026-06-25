@@ -89,7 +89,7 @@ app.get('/api/token', async (req, res) => {
 });
 
 // ==================================================
-// 4. ПОИСК — ИСПРАВЛЕННЫЙ!
+// 4. ПОИСК — ИСПРАВЛЕННЫЙ (POST-запрос!)
 // ==================================================
 app.get('/api/search', async (req, res) => {
   const query = req.query.q;
@@ -111,17 +111,20 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
-    // ВАЖНО: добавляем method: 'GET' и Content-Type
-    const response = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`,
-      {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
+    // ========== ГЛАВНОЕ ИЗМЕНЕНИЕ ==========
+    // Spotify изменил API — теперь limit передаётся в теле POST-запроса
+    const response = await fetch('https://api.spotify.com/v1/search', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        q: query,
+        type: 'track',
+        limit: 20
+      })
+    });
 
     const data = await response.json();
 
