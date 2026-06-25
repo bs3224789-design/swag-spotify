@@ -84,20 +84,11 @@ app.get('/api/token', async (req, res) => {
 // ==================================================
 app.get('/api/search', async (req, res) => {
   console.log('🔍 Входящий запрос:', req.url);
-  console.log('🔍 Параметры:', req.query);
   
-  // Пробуем взять q из разных мест
-  let query = req.query.q;
-  
-  // Если нет q — пробуем взять из query строки вручную
-  if (!query) {
-    const urlParams = new URLSearchParams(req.url.split('?')[1] || '');
-    query = urlParams.get('q');
-  }
-  
+  const query = req.query.q;
   if (!query) {
     console.log('❌ Нет параметра q!');
-    return res.status(400).json({ error: 'Нет запроса', received: req.query });
+    return res.status(400).json({ error: 'Нет запроса' });
   }
 
   console.log('✅ Ищем:', query);
@@ -115,6 +106,7 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
+    // ВАЖНО: limit=20 ОБЯЗАТЕЛЬНО!
     const response = await fetch(
       `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`,
       {
