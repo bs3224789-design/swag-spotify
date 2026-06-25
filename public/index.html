@@ -38,7 +38,6 @@
             cursor: pointer;
             transition: 0.3s;
             font-family: 'Segoe UI', sans-serif;
-            white-space: nowrap;
         }
         .login-btn:hover { background: rgba(255,255,255,0.15); }
         .login-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -65,7 +64,6 @@
             font-size: 15px;
             outline: none;
             font-family: 'Segoe UI', sans-serif;
-            transition: 0.3s;
         }
         .search-section input::placeholder { color: #666; }
         .search-section input:focus { background: rgba(255,255,255,0.1); }
@@ -79,7 +77,6 @@
             cursor: pointer;
             transition: 0.3s;
             font-weight: 600;
-            white-space: nowrap;
         }
         .search-section button:hover { background: rgba(255,255,255,0.12); }
 
@@ -98,7 +95,6 @@
             cursor: pointer;
             transition: 0.3s;
             text-align: left;
-            border: none;
         }
         .result-card:hover { background: rgba(255,255,255,0.07); }
         .result-card .cover {
@@ -138,22 +134,8 @@
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
         }
         .result-card:hover .cover .play-overlay { opacity: 1; transform: translateY(0); }
-        .result-card .title {
-            font-size: 15px;
-            font-weight: 600;
-            color: #fff;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .result-card .artist {
-            font-size: 13px;
-            color: #888;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            margin-top: 2px;
-        }
+        .result-card .title { font-size: 15px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .result-card .artist { font-size: 13px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
         .player-wrapper {
             border-radius: 8px;
@@ -169,8 +151,8 @@
             border: none;
         }
 
-        .loading { color: #666; font-family: 'Segoe UI', sans-serif; padding: 40px 0; font-size: 14px; text-align: center; }
-        .empty-state { color: #666; font-family: 'Segoe UI', sans-serif; padding: 20px 0; font-size: 14px; text-align: center; }
+        .loading { color: #666; padding: 40px 0; font-size: 14px; text-align: center; }
+        .empty-state { color: #666; padding: 20px 0; font-size: 14px; text-align: center; }
 
         @media (max-width: 600px) {
             .header { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -201,7 +183,7 @@
         <button id="searchBtn">Найти</button>
     </div>
 
-    <div class="section-title">Популярное</div>
+    <div class="section-title">Результаты</div>
     <div id="resultsContainer">
         <div class="empty-state">Войди в Spotify и ищи музыку</div>
     </div>
@@ -212,7 +194,7 @@
 
     <script>
         // =============================================
-        // ВСЯ ЛОГИКА
+        // ПОЛНАЯ ЛОГИКА
         // =============================================
         const loginBtn = document.getElementById('loginBtn');
         const statusEl = document.getElementById('status');
@@ -226,7 +208,7 @@
         let playlist = [];
 
         // =============================================
-        // 1. ПРОВЕРКА ТОКЕНА
+        // 1. ТОКЕН
         // =============================================
         const urlParams = new URLSearchParams(window.location.search);
         const tokenFromUrl = urlParams.get('access_token');
@@ -263,7 +245,7 @@
         }
 
         // =============================================
-        // 2. КНОПКА ВХОДА
+        // 2. ВХОД
         // =============================================
         loginBtn.addEventListener('click', function() {
             if (this.disabled) return;
@@ -271,13 +253,12 @@
         });
 
         // =============================================
-        // 3. ЗАГРУЗКА ПЛЕЙЛИСТОВ (С LIMIT!)
+        // 3. ПЛЕЙЛИСТЫ
         // =============================================
         async function loadUserPlaylists() {
             if (!accessToken) return;
 
             try {
-                // ВАЖНО: добавляем ?limit=50 к запросу
                 const response = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
@@ -292,7 +273,7 @@
                         loginBtn.classList.remove('green');
                         return;
                     }
-                    updateStatus('❌ Ошибка: ' + (data.error.message || 'Неизвестная'), 'error');
+                    updateStatus('❌ ' + data.error.message, 'error');
                     return;
                 }
 
@@ -311,40 +292,12 @@
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
-                updateStatus('❌ Ошибка загрузки', 'error');
+                updateStatus('❌ Ошибка', 'error');
             }
         }
 
         // =============================================
-        // 4. ОТРИСОВКА ТРЕКОВ
-        // =============================================
-        function renderTracks(tracks) {
-            if (!tracks || tracks.length === 0) {
-                resultsContainer.innerHTML = `<div class="empty-state">😢 Нет треков</div>`;
-                return;
-            }
-
-            let html = '<div class="results">';
-            tracks.slice(0, 12).forEach((track, index) => {
-                const cover = track.album?.images?.[0]?.url || '';
-                const coverHtml = cover ? `<img src="${cover}">` : '<div class="empty-cover">🎵</div>';
-                html += `
-                    <div class="result-card" onclick="playTrack(${index})" data-index="${index}">
-                        <div class="cover">
-                            ${coverHtml}
-                            <div class="play-overlay">▶</div>
-                        </div>
-                        <div class="title">${track.name}</div>
-                        <div class="artist">${track.artists.map(a => a.name).join(', ')}</div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            resultsContainer.innerHTML = html;
-        }
-
-        // =============================================
-        // 5. ПОИСК (С LIMIT!)
+        // 4. ПОИСК (ЧЕРЕЗ СЕРВЕР!)
         // =============================================
         async function searchMusic() {
             const query = searchInput.value.trim();
@@ -361,14 +314,12 @@
             resultsContainer.innerHTML = `<div class="loading">⏳ Ищем...</div>`;
 
             try {
-                // ВАЖНО: добавляем &limit=20 к поиску
-                const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`, {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
+                // Отправляем запрос на серверный эндпоинт
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
 
                 if (data.error) {
-                    if (data.error.status === 401) {
+                    if (data.error === 'Нет токена') {
                         updateStatus('❌ Токен протух', 'error');
                         localStorage.removeItem('spotify_token');
                         loginBtn.disabled = false;
@@ -377,7 +328,7 @@
                         resultsContainer.innerHTML = `<div class="empty-state">Войди заново</div>`;
                         return;
                     }
-                    resultsContainer.innerHTML = `<div class="empty-state">❌ ${data.error.message}</div>`;
+                    resultsContainer.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
                     return;
                 }
 
@@ -391,6 +342,34 @@
                 console.error('Ошибка:', error);
                 resultsContainer.innerHTML = `<div class="empty-state">❌ Ошибка поиска</div>`;
             }
+        }
+
+        // =============================================
+        // 5. ОТРИСОВКА
+        // =============================================
+        function renderTracks(tracks) {
+            if (!tracks || tracks.length === 0) {
+                resultsContainer.innerHTML = `<div class="empty-state">😢 Нет треков</div>`;
+                return;
+            }
+
+            let html = '<div class="results">';
+            tracks.slice(0, 12).forEach((track, index) => {
+                const cover = track.album?.images?.[0]?.url || '';
+                const coverHtml = cover ? `<img src="${cover}">` : '<div class="empty-cover">🎵</div>';
+                html += `
+                    <div class="result-card" onclick="playTrack(${index})">
+                        <div class="cover">
+                            ${coverHtml}
+                            <div class="play-overlay">▶</div>
+                        </div>
+                        <div class="title">${track.name}</div>
+                        <div class="artist">${track.artists.map(a => a.name).join(', ')}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            resultsContainer.innerHTML = html;
         }
 
         // =============================================
@@ -414,6 +393,9 @@
             if (e.key === 'Enter') searchMusic();
         });
 
+        // =============================================
+        // 8. АВТОПОИСК
+        // =============================================
         setTimeout(() => {
             if (accessToken) {
                 searchMusic();
@@ -422,5 +404,6 @@
 
         console.log('🩸 SWAG ЗАГРУЖЕН!');
     </script>
+
 </body>
 </html>
