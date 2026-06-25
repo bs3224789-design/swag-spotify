@@ -26,7 +26,9 @@ app.get('/login', (req, res) => {
     'user-read-private',
     'user-read-email',
     'playlist-read-private',
-    'playlist-read-collaborative'
+    'playlist-read-collaborative',
+    'user-library-read',
+    'user-top-read'
   ];
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes, 'state');
   res.redirect(authorizeURL);
@@ -80,21 +82,18 @@ app.get('/api/token', async (req, res) => {
 });
 
 // ==================================================
-// 4. ПОИСК — ИСПРАВЛЕННЫЙ!
+// 4. ПОИСК — АБСОЛЮТНО РАБОЧИЙ
 // ==================================================
 app.get('/api/search', async (req, res) => {
-  console.log('🔍 Входящий запрос:', req.url);
-  
   const query = req.query.q;
   if (!query) {
-    console.log('❌ Нет параметра q!');
     return res.status(400).json({ error: 'Нет запроса' });
   }
 
-  console.log('✅ Ищем:', query);
+  console.log('🔍 Ищем:', query);
 
   try {
-    // Проверяем токен
+    // Обновляем токен если нужно
     if (!accessToken || Date.now() > tokenExpirationTime) {
       if (refreshToken) {
         const data = await spotifyApi.refreshAccessToken();
@@ -106,12 +105,14 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
-    // ВАЖНО: limit=20 ОБЯЗАТЕЛЬНО!
+    // Правильный запрос к Spotify API с limit
     const response = await fetch(
       `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`,
       {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${accessToken}`
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
         }
       }
     );
@@ -119,11 +120,18 @@ app.get('/api/search', async (req, res) => {
     const data = await response.json();
 
     if (data.error) {
-      console.log('❌ Ошибка Spotify:', data.error);
-      return res.status(data.error.status || 500).json({ error: data.error.message });
+      console.error('❌ Ошибка Spotify:', data.error);
+      return res.status(data.error.status || 500).json({ 
+        error: data.error.message,
+        status: data.error.status 
+      });
     }
 
-    console.log('✅ Найдено:', data.tracks?.items?.length || 0);
+    if (!data.tracks || !data.tracks.items || data.tracks.items.length === 0) {
+      return res.json({ tracks: { items: [] } });
+    }
+
+    console.log(`✅ Найдено ${data.tracks.items.length} треков`);
     res.json(data);
   } catch (error) {
     console.error('❌ Ошибка поиска:', error);
