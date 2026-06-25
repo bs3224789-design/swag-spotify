@@ -6,9 +6,6 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ==================================================
-// НАСТРОЙКА SPOTIFY (берёт данные из переменных)
-// ==================================================
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
@@ -19,9 +16,6 @@ let accessToken = null;
 let refreshToken = null;
 let tokenExpirationTime = null;
 
-// ==================================================
-// СТАТИКА
-// ==================================================
 app.use(express.static('public'));
 
 // ==================================================
@@ -59,7 +53,7 @@ app.get('/callback', async (req, res) => {
     console.log('✅ Авторизация успешна!');
     res.redirect(`/?access_token=${accessToken}`);
   } catch (error) {
-    console.error('❌ Ошибка авторизации:', error);
+    console.error('❌ Ошибка:', error);
     res.status(500).send('Ошибка авторизации');
   }
 });
