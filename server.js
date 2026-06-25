@@ -6,9 +6,6 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ==================================================
-// 1. НАСТРОЙКА SPOTIFY
-// ==================================================
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
@@ -20,23 +17,21 @@ let refreshToken = null;
 let tokenExpirationTime = null;
 
 // ==================================================
-// 2. ЛОГИН
+// 1. ЛОГИН
 // ==================================================
 app.get('/login', (req, res) => {
   const scopes = [
     'user-read-private',
     'user-read-email',
-    'streaming',
-    'user-modify-playback-state',
-    'user-read-playback-state',
     'playlist-read-private',
+    'playlist-read-collaborative'
   ];
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes, 'state');
   res.redirect(authorizeURL);
 });
 
 // ==================================================
-// 3. КОЛБЭК
+// 2. КОЛБЭК
 // ==================================================
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
@@ -56,13 +51,13 @@ app.get('/callback', async (req, res) => {
     console.log('✅ Авторизация успешна!');
     res.redirect(`/?access_token=${accessToken}`);
   } catch (error) {
-    console.error('❌ Ошибка авторизации:', error);
+    console.error('❌ Ошибка:', error);
     res.status(500).send('Ошибка авторизации');
   }
 });
 
 // ==================================================
-// 4. API — ТОКЕН
+// 3. API — ТОКЕН
 // ==================================================
 app.get('/api/token', async (req, res) => {
   try {
@@ -82,6 +77,51 @@ app.get('/api/token', async (req, res) => {
   } catch (error) {
     console.error('❌ Ошибка:', error);
     res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+// ==================================================
+// 4. ПОИСК (через сервер, с токеном)
+// ==================================================
+app.get('/api/search', async (req, res) => {
+  const query = req.query.q;
+  if (!query) {
+    return res.status(400).json({ error: 'Нет запроса' });
+  }
+
+  try {
+    // Проверяем токен
+    if (!accessToken || Date.now() > tokenExpirationTime) {
+      if (refreshToken) {
+        const data = await spotifyApi.refreshAccessToken();
+        accessToken = data.body['access_token'];
+        tokenExpirationTime = Date.now() + data.body['expires_in'] * 1000;
+        spotifyApi.setAccessToken(accessToken);
+      } else {
+        return res.status(401).json({ error: 'Нет токена' });
+      }
+    }
+
+    // Делаем поиск
+    const response = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (data.error) {
+      return res.status(data.error.status || 500).json({ error: data.error.message });
+    }
+
+    res.json(data);
+  } catch (error) {
+    console.error('❌ Ошибка поиска:', error);
+    res.status(500).json({ error: 'Ошибка поиска' });
   }
 });
 
