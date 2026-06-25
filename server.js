@@ -20,7 +20,7 @@ let refreshToken = null;
 let tokenExpirationTime = null;
 
 // ==================================================
-// 2. ЛОГИН (отправляем пользователя в Spotify)
+// 2. ЛОГИН
 // ==================================================
 app.get('/login', (req, res) => {
   const scopes = [
@@ -31,13 +31,12 @@ app.get('/login', (req, res) => {
     'user-read-playback-state',
     'playlist-read-private',
   ];
-  // ВАЖНО: используем response_type=code
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes, 'state');
   res.redirect(authorizeURL);
 });
 
 // ==================================================
-// 3. КОЛБЭК (Spotify возвращает код, мы обмениваем на токен)
+// 3. КОЛБЭК
 // ==================================================
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
@@ -46,7 +45,6 @@ app.get('/callback', async (req, res) => {
   }
 
   try {
-    // Обмениваем code на access_token
     const data = await spotifyApi.authorizationCodeGrant(code);
     accessToken = data.body['access_token'];
     refreshToken = data.body['refresh_token'];
@@ -56,7 +54,6 @@ app.get('/callback', async (req, res) => {
     spotifyApi.setRefreshToken(refreshToken);
 
     console.log('✅ Авторизация успешна!');
-    // Редирект на главную с токеном
     res.redirect(`/?access_token=${accessToken}`);
   } catch (error) {
     console.error('❌ Ошибка авторизации:', error);
@@ -65,7 +62,7 @@ app.get('/callback', async (req, res) => {
 });
 
 // ==================================================
-// 4. API — отдаём токен фронтенду
+// 4. API — ТОКЕН
 // ==================================================
 app.get('/api/token', async (req, res) => {
   try {
@@ -89,7 +86,7 @@ app.get('/api/token', async (req, res) => {
 });
 
 // ==================================================
-// 5. СТАТИКА (раздаём index.html)
+// 5. ГЛАВНАЯ
 // ==================================================
 app.use(express.static('public'));
 
