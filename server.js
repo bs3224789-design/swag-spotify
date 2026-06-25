@@ -1,5 +1,98 @@
+const express = require('express');
+const SpotifyWebApi = require('spotify-web-api-node');
+const path = require('path');
+require('dotenv').config();
+
 // ==================================================
-// 4. ПОИСК (через сервер, с токеном)
+// 1. ИНИЦИАЛИЗАЦИЯ
+// ==================================================
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// ==================================================
+// 2. НАСТРОЙКА SPOTIFY
+// ==================================================
+const spotifyApi = new SpotifyWebApi({
+  clientId: process.env.CLIENT_ID,
+  clientSecret: process.env.CLIENT_SECRET,
+  redirectUri: process.env.REDIRECT_URI,
+});
+
+let accessToken = null;
+let refreshToken = null;
+let tokenExpirationTime = null;
+
+// ==================================================
+// 3. СТАТИКА (раздаём public папку)
+// ==================================================
+app.use(express.static('public'));
+
+// ==================================================
+// 4. ЛОГИН (отправляем пользователя в Spotify)
+// ==================================================
+app.get('/login', (req, res) => {
+  const scopes = [
+    'user-read-private',
+    'user-read-email',
+    'playlist-read-private',
+    'playlist-read-collaborative'
+  ];
+  const authorizeURL = spotifyApi.createAuthorizeURL(scopes, 'state');
+  res.redirect(authorizeURL);
+});
+
+// ==================================================
+// 5. КОЛБЭК (Spotify возвращает код, мы обмениваем на токен)
+// ==================================================
+app.get('/callback', async (req, res) => {
+  const code = req.query.code;
+  if (!code) {
+    return res.status(400).send('❌ Код не найден!');
+  }
+
+  try {
+    const data = await spotifyApi.authorizationCodeGrant(code);
+    accessToken = data.body['access_token'];
+    refreshToken = data.body['refresh_token'];
+    tokenExpirationTime = Date.now() + data.body['expires_in'] * 1000;
+
+    spotifyApi.setAccessToken(accessToken);
+    spotifyApi.setRefreshToken(refreshToken);
+
+    console.log('✅ Авторизация успешна!');
+    res.redirect(`/?access_token=${accessToken}`);
+  } catch (error) {
+    console.error('❌ Ошибка авторизации:', error);
+    res.status(500).send('Ошибка авторизации');
+  }
+});
+
+// ==================================================
+// 6. API — отдаём токен фронтенду
+// ==================================================
+app.get('/api/token', async (req, res) => {
+  try {
+    if (accessToken && Date.now() < tokenExpirationTime) {
+      return res.json({ accessToken });
+    }
+
+    if (refreshToken) {
+      const data = await spotifyApi.refreshAccessToken();
+      accessToken = data.body['access_token'];
+      tokenExpirationTime = Date.now() + data.body['expires_in'] * 1000;
+      spotifyApi.setAccessToken(accessToken);
+      return res.json({ accessToken });
+    }
+
+    return res.status(401).json({ error: 'Нет токена' });
+  } catch (error) {
+    console.error('❌ Ошибка:', error);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+// ==================================================
+// 7. ПОИСК (через сервер, с токеном)
 // ==================================================
 app.get('/api/search', async (req, res) => {
   const query = req.query.q;
@@ -20,6 +113,7 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
+    // Делаем запрос к Spotify API
     const response = await fetch(
       `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`,
       {
@@ -40,4 +134,24 @@ app.get('/api/search', async (req, res) => {
     console.error('❌ Ошибка поиска:', error);
     res.status(500).json({ error: 'Ошибка поиска' });
   }
+});
+
+// ==================================================
+// 8. ГЛАВНАЯ СТРАНИЦА
+// ==================================================
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// ==================================================
+// 9. ЗАПУСК СЕРВЕРА
+// ==================================================
+app.listen(PORT, () => {
+  console.log('');
+  console.log('🩸 ========================================');
+  console.log('🔥  SWAG SPOTIFY ЗАПУЩЕН!');
+  console.log(`🔗  http://localhost:${PORT}`);
+  console.log(`👉  Зайди на /login`);
+  console.log('🩸 ========================================');
+  console.log('');
 });
