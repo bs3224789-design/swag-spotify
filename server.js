@@ -18,9 +18,6 @@ let tokenExpirationTime = null;
 
 app.use(express.static('public'));
 
-// ==================================================
-// 1. ЛОГИН
-// ==================================================
 app.get('/login', (req, res) => {
   const scopes = [
     'user-read-private',
@@ -38,9 +35,6 @@ app.get('/login', (req, res) => {
   res.redirect(authorizeURL);
 });
 
-// ==================================================
-// 2. КОЛБЭК
-// ==================================================
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
   if (!code) {
@@ -64,9 +58,6 @@ app.get('/callback', async (req, res) => {
   }
 });
 
-// ==================================================
-// 3. ТОКЕН
-// ==================================================
 app.get('/api/token', async (req, res) => {
   try {
     if (accessToken && Date.now() < tokenExpirationTime) {
@@ -88,9 +79,9 @@ app.get('/api/token', async (req, res) => {
   }
 });
 
-// ==================================================
-// 4. ПОИСК — 100% РАБОЧИЙ!
-// ==================================================
+// =============================================
+// ГЛАВНОЕ: ПОИСК С LIMIT В URL
+// =============================================
 app.get('/api/search', async (req, res) => {
   const query = req.query.q;
   if (!query) {
@@ -111,19 +102,15 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
-    // Правильный GET-запрос с limit в URL
+    // ПРАВИЛЬНЫЙ ЗАПРОС: limit=20 В URL
     const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`;
     console.log('📡 Запрос к Spotify:', url);
 
     const response = await fetch(url, {
-      method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json'
+        'Authorization': `Bearer ${accessToken}`
       }
     });
-
-    console.log('📊 Статус ответа:', response.status);
 
     const data = await response.json();
 
@@ -136,24 +123,14 @@ app.get('/api/search', async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error('❌ Ошибка поиска:', error);
-    res.status(500).json({ 
-      error: 'Ошибка поиска',
-      message: error.message,
-      stack: error.stack
-    });
+    res.status(500).json({ error: 'Ошибка поиска' });
   }
 });
 
-// ==================================================
-// 5. ГЛАВНАЯ
-// ==================================================
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ==================================================
-// 6. ЗАПУСК
-// ==================================================
 app.listen(PORT, () => {
   console.log('');
   console.log('🩸 ========================================');
