@@ -1,152 +1,362 @@
-const express = require('express');
-const SpotifyWebApi = require('spotify-web-api-node');
-const path = require('path');
-require('dotenv').config();
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-const spotifyApi = new SpotifyWebApi({
-  clientId: process.env.CLIENT_ID,
-  clientSecret: process.env.CLIENT_SECRET,
-  redirectUri: process.env.REDIRECT_URI,
-});
-
-let accessToken = null;
-let refreshToken = null;
-let tokenExpirationTime = null;
-
-app.use(express.static('public'));
-
-// ==================================================
-// 1. ЛОГИН — С РАСШИРЕННЫМИ ПРАВАМИ!
-// ==================================================
-app.get('/login', (req, res) => {
-  const scopes = [
-    'user-read-private',
-    'user-read-email',
-    'playlist-read-private',
-    'playlist-read-collaborative',
-    'user-library-read',
-    'user-top-read',
-    'user-read-playback-state',
-    'user-modify-playback-state',
-    'user-read-currently-playing',
-    'streaming'
-  ];
-  const authorizeURL = spotifyApi.createAuthorizeURL(scopes, 'state');
-  res.redirect(authorizeURL);
-});
-
-// ==================================================
-// 2. КОЛБЭК
-// ==================================================
-app.get('/callback', async (req, res) => {
-  const code = req.query.code;
-  if (!code) {
-    return res.status(400).send('❌ Код не найден!');
-  }
-
-  try {
-    const data = await spotifyApi.authorizationCodeGrant(code);
-    accessToken = data.body['access_token'];
-    refreshToken = data.body['refresh_token'];
-    tokenExpirationTime = Date.now() + data.body['expires_in'] * 1000;
-
-    spotifyApi.setAccessToken(accessToken);
-    spotifyApi.setRefreshToken(refreshToken);
-
-    console.log('✅ Авторизация успешна!');
-    res.redirect(`/?access_token=${accessToken}`);
-  } catch (error) {
-    console.error('❌ Ошибка:', error);
-    res.status(500).send('Ошибка авторизации');
-  }
-});
-
-// ==================================================
-// 3. ТОКЕН
-// ==================================================
-app.get('/api/token', async (req, res) => {
-  try {
-    if (accessToken && Date.now() < tokenExpirationTime) {
-      return res.json({ accessToken });
-    }
-
-    if (refreshToken) {
-      const data = await spotifyApi.refreshAccessToken();
-      accessToken = data.body['access_token'];
-      tokenExpirationTime = Date.now() + data.body['expires_in'] * 1000;
-      spotifyApi.setAccessToken(accessToken);
-      return res.json({ accessToken });
-    }
-
-    return res.status(401).json({ error: 'Нет токена' });
-  } catch (error) {
-    console.error('❌ Ошибка:', error);
-    res.status(500).json({ error: 'Ошибка сервера' });
-  }
-});
-
-// ==================================================
-// 4. ПОИСК
-// ==================================================
-app.get('/api/search', async (req, res) => {
-  const query = req.query.q;
-  if (!query) {
-    return res.status(400).json({ error: 'Нет запроса' });
-  }
-
-  try {
-    if (!accessToken || Date.now() > tokenExpirationTime) {
-      if (refreshToken) {
-        const data = await spotifyApi.refreshAccessToken();
-        accessToken = data.body['access_token'];
-        tokenExpirationTime = Date.now() + data.body['expires_in'] * 1000;
-        spotifyApi.setAccessToken(accessToken);
-      } else {
-        return res.status(401).json({ error: 'Нет токена' });
-      }
-    }
-
-    const response = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SWAG</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            color: #fff;
+            padding: 0 20px 100px 20px;
         }
-      }
-    );
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0 16px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            position: sticky;
+            top: 0;
+            background: #000000;
+            z-index: 10;
+        }
+        .logo { font-size: 28px; font-weight: 900; letter-spacing: 4px; color: #fff; font-family: 'Impact', sans-serif; }
+        .logo span { color: #cc0000; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .login-btn {
+            background: rgba(255,255,255,0.08);
+            border: none;
+            border-radius: 40px;
+            padding: 10px 24px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .login-btn:hover { background: rgba(255,255,255,0.15); }
+        .login-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .login-btn.green { background: #1db954; color: #000; }
+        .login-btn.green:hover { background: #1ed760; }
+        .status-text { font-size: 13px; color: #666; font-weight: 400; }
+        .status-text.success { color: #1db954; }
+        .status-text.error { color: #cc0000; }
 
-    const data = await response.json();
+        .search-section {
+            margin: 24px 0 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .search-section input {
+            flex: 1;
+            min-width: 200px;
+            background: rgba(255,255,255,0.06);
+            border: none;
+            border-radius: 40px;
+            padding: 14px 20px;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .search-section input::placeholder { color: #666; }
+        .search-section input:focus { background: rgba(255,255,255,0.1); }
+        .search-section button {
+            background: rgba(255,255,255,0.06);
+            border: none;
+            border-radius: 40px;
+            padding: 14px 28px;
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+        .search-section button:hover { background: rgba(255,255,255,0.12); }
 
-    if (data.error) {
-      return res.status(data.error.status || 500).json({ error: data.error.message });
-    }
+        .section-title { font-size: 22px; font-weight: 700; margin: 28px 0 16px 0; color: #fff; }
 
-    res.json(data);
-  } catch (error) {
-    console.error('❌ Ошибка поиска:', error);
-    res.status(500).json({ error: 'Ошибка поиска' });
-  }
-});
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+        .result-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            padding: 16px 16px 12px 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: left;
+        }
+        .result-card:hover { background: rgba(255,255,255,0.07); }
+        .result-card .cover {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 6px;
+            background: #1a1a1a;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 12px;
+        }
+        .result-card .cover img { width: 100%; height: 100%; object-fit: cover; }
+        .result-card .cover .empty-cover {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 48px;
+            color: #333;
+        }
+        .result-card .cover .play-overlay {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #1db954;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: #000;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: 0.3s;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+        }
+        .result-card:hover .cover .play-overlay { opacity: 1; transform: translateY(0); }
+        .result-card .title { font-size: 15px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .result-card .artist { font-size: 13px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
 
-// ==================================================
-// 5. ГЛАВНАЯ
-// ==================================================
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+        .player-wrapper {
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            margin-top: 16px;
+        }
+        .player-wrapper iframe {
+            display: block;
+            width: 100%;
+            height: 80px;
+            border: none;
+        }
 
-// ==================================================
-// 6. ЗАПУСК
-// ==================================================
-app.listen(PORT, () => {
-  console.log('');
-  console.log('🩸 ========================================');
-  console.log('🔥  SWAG SPOTIFY ЗАПУЩЕН!');
-  console.log(`🔗  http://localhost:${PORT}`);
-  console.log(`👉  Зайди на /login`);
-  console.log('🩸 ========================================');
-  console.log('');
-});
+        .loading { color: #666; padding: 40px 0; font-size: 14px; text-align: center; }
+        .empty-state { color: #666; padding: 20px 0; font-size: 14px; text-align: center; }
+
+        @media (max-width: 600px) {
+            .header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .header-right { width: 100%; justify-content: space-between; }
+            .logo { font-size: 22px; }
+            .results { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+            .search-section { flex-wrap: wrap; }
+            .search-section input { min-width: 100px; }
+            .search-section button { padding: 14px 16px; font-size: 13px; }
+        }
+        @media (max-width: 400px) {
+            .results { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="logo"><span>SWAG</span></div>
+        <div class="header-right">
+            <span class="status-text" id="status">Войди в Spotify</span>
+            <button class="login-btn" id="loginBtn">Войти</button>
+        </div>
+    </div>
+
+    <div class="search-section">
+        <input type="text" id="searchInput" placeholder="Что будем слушать?" value="The Weeknd Starboy">
+        <button id="searchBtn">Найти</button>
+    </div>
+
+    <div class="section-title">Результаты</div>
+    <div id="resultsContainer">
+        <div class="empty-state">Войди в Spotify и ищи музыку</div>
+    </div>
+
+    <div class="player-wrapper" id="playerWrapper">
+        <iframe id="playerFrame" src="" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+    </div>
+
+    <script>
+        const loginBtn = document.getElementById('loginBtn');
+        const statusEl = document.getElementById('status');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const playerWrapper = document.getElementById('playerWrapper');
+        const playerFrame = document.getElementById('playerFrame');
+
+        let accessToken = null;
+        let playlist = [];
+
+        function updateStatus(text, type = '') {
+            statusEl.textContent = text;
+            statusEl.className = 'status-text';
+            if (type === 'success') statusEl.classList.add('success');
+            if (type === 'error') statusEl.classList.add('error');
+            if (text.includes('Авторизован')) {
+                loginBtn.disabled = true;
+                loginBtn.textContent = '✅ Вход';
+                loginBtn.classList.add('green');
+            } else {
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Войти';
+                loginBtn.classList.remove('green');
+            }
+        }
+
+        function getToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tokenFromUrl = urlParams.get('access_token');
+            if (tokenFromUrl) {
+                accessToken = tokenFromUrl;
+                localStorage.setItem('spotify_token', accessToken);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                updateStatus('✅ Авторизован', 'success');
+                loadUserPlaylists();
+                return true;
+            }
+            const savedToken = localStorage.getItem('spotify_token');
+            if (savedToken) {
+                accessToken = savedToken;
+                updateStatus('✅ Авторизован (кеш)', 'success');
+                loadUserPlaylists();
+                return true;
+            }
+            updateStatus('🔑 Войди в Spotify', '');
+            return false;
+        }
+
+        loginBtn.addEventListener('click', function() {
+            if (this.disabled) return;
+            window.location.href = '/login';
+        });
+
+        async function loadUserPlaylists() {
+            if (!accessToken) return;
+            try {
+                const response = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
+                    headers: { 'Authorization': `Bearer ${accessToken}` }
+                });
+                const data = await response.json();
+                if (data.error && data.error.status === 401) {
+                    updateStatus('❌ Токен протух', 'error');
+                    localStorage.removeItem('spotify_token');
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Войти';
+                    loginBtn.classList.remove('green');
+                    return;
+                }
+                if (data.items && data.items.length > 0) {
+                    const firstPlaylist = data.items[0];
+                    const tracksRes = await fetch(`https://api.spotify.com/v1/playlists/${firstPlaylist.id}/tracks?limit=50`, {
+                        headers: { 'Authorization': `Bearer ${accessToken}` }
+                    });
+                    const tracksData = await tracksRes.json();
+                    const tracks = tracksData.items.map(item => item.track).filter(t => t);
+                    playlist = tracks;
+                    renderTracks(tracks);
+                    updateStatus(`✅ ${tracks.length} треков`, 'success');
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки плейлистов:', error);
+            }
+        }
+
+        async function searchMusic() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                resultsContainer.innerHTML = `<div class="empty-state">Напиши название</div>`;
+                return;
+            }
+            if (!accessToken) {
+                resultsContainer.innerHTML = `<div class="empty-state">Сначала войди в Spotify</div>`;
+                return;
+            }
+            resultsContainer.innerHTML = `<div class="loading">⏳ Ищем...</div>`;
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Ошибка ${response.status}: ${errorText}`);
+                }
+                const data = await response.json();
+                if (data.error) {
+                    resultsContainer.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
+                    return;
+                }
+                if (data.tracks && data.tracks.items && data.tracks.items.length > 0) {
+                    playlist = data.tracks.items;
+                    renderTracks(playlist);
+                } else {
+                    resultsContainer.innerHTML = `<div class="empty-state">😢 Ничего не найдено</div>`;
+                }
+            } catch (error) {
+                console.error('Ошибка поиска:', error);
+                resultsContainer.innerHTML = `<div class="empty-state">❌ Ошибка поиска: ${error.message}</div>`;
+            }
+        }
+
+        function renderTracks(tracks) {
+            if (!tracks || tracks.length === 0) {
+                resultsContainer.innerHTML = `<div class="empty-state">😢 Нет треков</div>`;
+                return;
+            }
+            let html = '<div class="results">';
+            tracks.slice(0, 12).forEach((track, index) => {
+                const cover = track.album?.images?.[0]?.url || '';
+                const coverHtml = cover ? `<img src="${cover}">` : '<div class="empty-cover">🎵</div>';
+                html += `
+                    <div class="result-card" onclick="playTrack(${index})">
+                        <div class="cover">
+                            ${coverHtml}
+                            <div class="play-overlay">▶</div>
+                        </div>
+                        <div class="title">${track.name}</div>
+                        <div class="artist">${track.artists.map(a => a.name).join(', ')}</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            resultsContainer.innerHTML = html;
+        }
+
+        function playTrack(index) {
+            if (index < 0 || index >= playlist.length) return;
+            const track = playlist[index];
+            if (!track) return;
+            playerFrame.src = `https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0&autoplay=1`;
+            playerWrapper.style.display = 'block';
+            playerWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        searchBtn.addEventListener('click', searchMusic);
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchMusic();
+        });
+
+        const hasToken = getToken();
+        if (hasToken) {
+            setTimeout(() => searchMusic(), 1000);
+        }
+
+        console.log('🩸 SWAG ЗАГРУЖЕН!');
+    </script>
+
+</body>
+</html>
