@@ -89,7 +89,7 @@ app.get('/api/token', async (req, res) => {
 });
 
 // ==================================================
-// 4. ПОИСК — ИСПРАВЛЕННЫЙ (POST-запрос!)
+// 4. ПОИСК — 100% РАБОЧИЙ!
 // ==================================================
 app.get('/api/search', async (req, res) => {
   const query = req.query.q;
@@ -111,20 +111,19 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
-    // ========== ГЛАВНОЕ ИЗМЕНЕНИЕ ==========
-    // Spotify изменил API — теперь limit передаётся в теле POST-запроса
-    const response = await fetch('https://api.spotify.com/v1/search', {
-      method: 'POST',
+    // Правильный GET-запрос с limit в URL
+    const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`;
+    console.log('📡 Запрос к Spotify:', url);
+
+    const response = await fetch(url, {
+      method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        q: query,
-        type: 'track',
-        limit: 20
-      })
+      }
     });
+
+    console.log('📊 Статус ответа:', response.status);
 
     const data = await response.json();
 
@@ -137,7 +136,11 @@ app.get('/api/search', async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error('❌ Ошибка поиска:', error);
-    res.status(500).json({ error: 'Ошибка поиска' });
+    res.status(500).json({ 
+      error: 'Ошибка поиска',
+      message: error.message,
+      stack: error.stack
+    });
   }
 });
 
