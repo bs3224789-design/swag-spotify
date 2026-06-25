@@ -19,7 +19,7 @@ let tokenExpirationTime = null;
 app.use(express.static('public'));
 
 // ==================================================
-// 1. ЛОГИН
+// 1. ЛОГИН — С РАСШИРЕННЫМИ ПРАВАМИ!
 // ==================================================
 app.get('/login', (req, res) => {
   const scopes = [
@@ -57,9 +57,10 @@ app.get('/callback', async (req, res) => {
     spotifyApi.setRefreshToken(refreshToken);
 
     console.log('✅ Авторизация успешна!');
+    console.log('🔑 Токен:', accessToken.substring(0, 30) + '...');
     res.redirect(`/?access_token=${accessToken}`);
   } catch (error) {
-    console.error('❌ Ошибка:', error);
+    console.error('❌ Ошибка авторизации:', error);
     res.status(500).send('Ошибка авторизации');
   }
 });
