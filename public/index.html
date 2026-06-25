@@ -6,8 +6,9 @@
     <title>SWAG</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: 'Arial Black', sans-serif;
+            font-family: 'Segoe UI', 'Arial', sans-serif;
             background: #0a0000;
             min-height: 100vh;
             color: #fff;
@@ -15,8 +16,10 @@
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            padding: 20px;
+            padding: 16px;
         }
+
+        /* ===== ЗВЁЗДЫ ===== */
         #starfield {
             position: fixed;
             top: 0;
@@ -24,144 +27,272 @@
             width: 100%;
             height: 100%;
             z-index: 0;
-            background: radial-gradient(ellipse at bottom, #1b0000 0%, #0a0000 70%);
+            background: radial-gradient(ellipse at bottom, #0a0000 0%, #050000 70%);
         }
+
         .app {
             position: relative;
             z-index: 1;
-            max-width: 1200px;
+            max-width: 480px;
             width: 100%;
             text-align: center;
         }
+
+        /* ===== ЗАГОЛОВОК ===== */
         .blood-title {
-            font-size: 80px;
+            font-size: 64px;
             font-weight: 900;
-            letter-spacing: 15px;
-            color: #8b0000;
-            text-shadow: 0 0 20px rgba(139,0,0,0.8), 0 0 60px rgba(200,0,0,0.4);
-            font-family: 'Impact', sans-serif;
-        }
-        .blood-sub {
-            font-size: 18px;
-            color: #661111;
             letter-spacing: 8px;
-            margin-bottom: 30px;
-            font-family: Arial, sans-serif;
+            color: #cc0000;
+            text-shadow: 0 0 30px rgba(200, 0, 0, 0.4);
+            font-family: 'Impact', sans-serif;
+            margin-bottom: 4px;
         }
-        .login-btn {
-            background: linear-gradient(135deg, #1db954, #1ed760);
-            border: none;
-            padding: 16px 48px;
-            border-radius: 60px;
-            font-weight: 900;
-            color: #000;
-            font-size: 20px;
-            cursor: pointer;
-            font-family: 'Arial Black', sans-serif;
+
+        .blood-sub {
+            font-size: 14px;
+            color: #883333;
+            letter-spacing: 6px;
+            font-family: 'Segoe UI', sans-serif;
+            margin-bottom: 24px;
+        }
+
+        /* ===== СТЕКЛЯННЫЕ КАРТОЧКИ ===== */
+        .glass {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            padding: 20px 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             transition: 0.3s;
         }
-        .login-btn:hover { transform: scale(1.05); box-shadow: 0 0 60px rgba(29,185,84,0.5); }
-        .login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .status {
-            margin-top: 20px;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-family: Arial, sans-serif;
-            background: rgba(29,185,84,0.2);
-            border: 1px solid #1db954;
+
+        .glass:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* ===== КНОПКА ВХОДА ===== */
+        .login-btn {
+            background: rgba(29, 185, 84, 0.15);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(29, 185, 84, 0.3);
+            border-radius: 60px;
+            padding: 16px 40px;
             color: #1db954;
-            display: inline-block;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Segoe UI', sans-serif;
+            width: 100%;
+            letter-spacing: 1px;
         }
+
+        .login-btn:hover {
+            background: rgba(29, 185, 84, 0.25);
+            box-shadow: 0 0 30px rgba(29, 185, 84, 0.1);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ===== СТАТУС ===== */
+        .status {
+            font-size: 14px;
+            color: #883333;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 8px 0;
+        }
+
+        .status.success {
+            color: #1db954;
+        }
+
         .status.error {
-            background: rgba(255,0,0,0.2);
-            border-color: #ff0000;
-            color: #ff0000;
+            color: #cc0000;
         }
+
+        /* ===== ПОИСК ===== */
         .search-section {
-            margin: 20px 0;
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            justify-content: center;
         }
+
         .search-section input {
             flex: 1;
-            min-width: 250px;
-            background: rgba(20,0,0,0.85);
-            border: 2px solid #8b0000;
-            border-radius: 40px;
+            min-width: 180px;
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 60px;
             padding: 14px 20px;
             color: #fff;
-            font-size: 16px;
+            font-size: 15px;
             outline: none;
-            font-family: Arial, sans-serif;
-        }
-        .search-section input:focus { border-color: #ff0000; }
-        .search-section button {
-            background: linear-gradient(135deg, #8b0000, #cc0000);
-            border: none;
-            padding: 14px 30px;
-            border-radius: 40px;
-            color: #fff;
-            font-weight: 900;
-            cursor: pointer;
-            font-family: 'Arial Black', sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             transition: 0.3s;
         }
-        .search-section button:hover { transform: scale(1.05); }
+
+        .search-section input::placeholder {
+            color: #663333;
+        }
+
+        .search-section input:focus {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .search-section button {
+            background: rgba(200, 0, 0, 0.15);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(200, 0, 0, 0.25);
+            border-radius: 60px;
+            padding: 14px 24px;
+            color: #cc6666;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+            font-family: 'Segoe UI', sans-serif;
+            letter-spacing: 0.5px;
+        }
+
+        .search-section button:hover {
+            background: rgba(200, 0, 0, 0.25);
+            box-shadow: 0 0 30px rgba(200, 0, 0, 0.1);
+        }
+
+        /* ===== РЕЗУЛЬТАТЫ ===== */
         .results {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 16px;
-            margin-top: 20px;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 8px;
             width: 100%;
         }
+
         .result-card {
-            background: rgba(20,0,0,0.7);
-            border-radius: 12px;
-            padding: 12px;
-            border: 1px solid #2a0a0a;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 14px 18px;
             cursor: pointer;
             transition: 0.3s;
-            text-align: center;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 14px;
         }
-        .result-card:hover { border-color: #cc0000; transform: translateY(-4px); }
+
+        .result-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.1);
+            transform: translateX(4px);
+        }
+
         .result-card .cover {
-            width: 100%;
-            aspect-ratio: 1/1;
-            border-radius: 8px;
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
             background: #1a0a0a;
             overflow: hidden;
-            margin-bottom: 8px;
+            flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 48px;
+            font-size: 24px;
         }
-        .result-card .cover img { width: 100%; height: 100%; object-fit: cover; }
-        .result-card .title { font-size: 14px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .result-card .artist { font-size: 12px; color: #883333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .loading { color: #883333; font-family: Arial, sans-serif; padding: 40px 0; }
-        .no-results { color: #883333; font-family: Arial, sans-serif; padding: 40px 0; font-size: 18px; }
-        .player-wrapper {
+
+        .result-card .cover img {
             width: 100%;
-            max-width: 800px;
-            margin-top: 20px;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .result-card .info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .result-card .title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .result-card .artist {
+            font-size: 13px;
+            color: #883333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ===== ПЛЕЕР ===== */
+        .player-wrapper {
             border-radius: 16px;
             overflow: hidden;
-            border: 2px solid #2a0a0a;
-            background: #0a0000;
+            margin-top: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             display: none;
         }
+
         .player-wrapper iframe {
             display: block;
             width: 100%;
             height: 352px;
             border: none;
         }
-        @media (max-width: 768px) {
+
+        /* ===== ТЕКСТОВЫЕ СОСТОЯНИЯ ===== */
+        .loading {
+            color: #663333;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 24px 0;
+            font-size: 15px;
+        }
+
+        .no-results {
+            color: #663333;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 24px 0;
+            font-size: 15px;
+        }
+
+        .empty-state {
+            color: #553333;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 16px 0;
+            font-size: 14px;
+        }
+
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 480px) {
             .blood-title { font-size: 44px; letter-spacing: 4px; }
-            .player-wrapper iframe { height: 200px; }
+            .app { padding: 0; }
+            .glass { padding: 16px; }
+            .search-section input { min-width: 120px; }
+            .player-wrapper iframe { height: 220px; }
+            .result-card .cover { width: 44px; height: 44px; }
+            .result-card .title { font-size: 14px; }
         }
     </style>
 </head>
@@ -170,25 +301,43 @@
     <canvas id="starfield"></canvas>
 
     <div class="app">
+
+        <!-- ЗАГОЛОВОК -->
         <div class="blood-title">SWAG</div>
         <div class="blood-sub">• только для своих</div>
 
-        <button class="login-btn" id="loginBtn">🔑 Войти через Spotify</button>
-        <div class="status" id="status">⏳ Нажми на кнопку выше</div>
-
-        <div class="search-section">
-            <input type="text" id="searchInput" placeholder="🎵 Напиши название трека..." value="The Weeknd Starboy">
-            <button id="searchBtn">🔍 Искать</button>
+        <!-- КНОПКА ВХОДА + СТАТУС -->
+        <div class="glass">
+            <button class="login-btn" id="loginBtn">🔑 Войти через Spotify</button>
+            <div class="status" id="status">Нажми на кнопку выше</div>
         </div>
 
-        <div id="results"><div class="loading">⏳ Войди в Spotify и ищи музыку</div></div>
+        <!-- ПОИСК -->
+        <div class="glass">
+            <div class="search-section">
+                <input type="text" id="searchInput" placeholder="Поиск треков..." value="The Weeknd Starboy">
+                <button id="searchBtn">Искать</button>
+            </div>
+        </div>
 
+        <!-- РЕЗУЛЬТАТЫ -->
+        <div id="resultsContainer">
+            <div class="glass">
+                <div class="empty-state">Войди в Spotify и ищи музыку</div>
+            </div>
+        </div>
+
+        <!-- ПЛЕЕР -->
         <div class="player-wrapper" id="playerWrapper">
             <iframe id="playerFrame" src="" frameborder="0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
         </div>
+
     </div>
 
     <script>
+        // =============================================
+        // 1. ЗВЁЗДЫ
+        // =============================================
         const canvas = document.getElementById('starfield');
         const ctx = canvas.getContext('2d');
         let stars = [];
@@ -200,33 +349,39 @@
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
 
-        for (let i = 0; i < 300; i++) {
+        for (let i = 0; i < 200; i++) {
             stars.push({
                 x: Math.random() * canvas.width,
                 y: Math.random() * canvas.height,
-                radius: Math.random() * 2.5 + 0.5,
-                speed: Math.random() * 0.3 + 0.05,
-                brightness: Math.random() * 0.8 + 0.2
+                radius: Math.random() * 2 + 0.5,
+                speed: Math.random() * 0.2 + 0.03,
+                brightness: Math.random() * 0.7 + 0.3,
+                phase: Math.random() * Math.PI * 2
             });
         }
 
         function drawStars() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const gradient = ctx.createRadialGradient(canvas.width/2, canvas.height, 0, canvas.width/2, canvas.height, canvas.width*0.8);
-            gradient.addColorStop(0, '#1a0505');
+            gradient.addColorStop(0, '#120000');
             gradient.addColorStop(1, '#050000');
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+            const time = Date.now() / 1000;
+
             stars.forEach(star => {
                 star.y += star.speed;
                 if (star.y > canvas.height) { star.y = 0; star.x = Math.random() * canvas.width; }
-                const flicker = Math.sin(Date.now() / 1000 * (1 + star.speed * 3)) * 0.3 + 0.7;
+                const flicker = Math.sin(time * (1 + star.speed * 5) + star.phase) * 0.3 + 0.7;
                 const alpha = star.brightness * flicker;
                 ctx.beginPath();
                 ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 200, 200, ${alpha})`;
-                if (star.radius > 1.8) { ctx.shadowColor = 'rgba(255,100,100,0.3)'; ctx.shadowBlur = 15; }
+                ctx.fillStyle = `rgba(255, 200, 200, ${alpha * 0.6})`;
+                if (star.radius > 1.5) {
+                    ctx.shadowColor = 'rgba(255,100,100,0.15)';
+                    ctx.shadowBlur = 12;
+                }
                 ctx.fill();
                 ctx.shadowBlur = 0;
             });
@@ -235,13 +390,13 @@
         drawStars();
 
         // =============================================
-        // SPOTIFY
+        // 2. SPOTIFY
         // =============================================
         const loginBtn = document.getElementById('loginBtn');
         const statusEl = document.getElementById('status');
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
-        const resultsContainer = document.getElementById('results');
+        const resultsContainer = document.getElementById('resultsContainer');
         const playerWrapper = document.getElementById('playerWrapper');
         const playerFrame = document.getElementById('playerFrame');
 
@@ -254,13 +409,13 @@
             accessToken = tokenFromUrl;
             localStorage.setItem('spotify_token', accessToken);
             window.history.replaceState({}, document.title, '/');
-            showStatus('✅ Авторизован!', '');
+            showStatus('✅ Авторизован', 'success');
             loadUserPlaylists();
         } else {
             const savedToken = localStorage.getItem('spotify_token');
             if (savedToken) {
                 accessToken = savedToken;
-                showStatus('✅ Авторизован (из кеша)', '');
+                showStatus('✅ Авторизован', 'success');
                 loadUserPlaylists();
             }
         }
@@ -268,6 +423,7 @@
         function showStatus(text, type = '') {
             statusEl.textContent = text;
             statusEl.className = 'status';
+            if (type === 'success') statusEl.classList.add('success');
             if (type === 'error') statusEl.classList.add('error');
             if (text.includes('Авторизован')) {
                 loginBtn.disabled = true;
@@ -279,12 +435,16 @@
             window.location.href = '/login';
         });
 
+        // =============================================
+        // 3. ЗАГРУЗКА ПЛЕЙЛИСТОВ
+        // =============================================
         async function loadUserPlaylists() {
             try {
                 const response = await fetch('https://api.spotify.com/v1/me/playlists', {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
                 const data = await response.json();
+
                 if (data.error) {
                     if (data.error.status === 401) {
                         showStatus('❌ Токен протух, войди заново', 'error');
@@ -296,6 +456,7 @@
                     showStatus('❌ Ошибка загрузки', 'error');
                     return;
                 }
+
                 if (data.items && data.items.length > 0) {
                     const firstPlaylist = data.items[0];
                     const tracksRes = await fetch(`https://api.spotify.com/v1/playlists/${firstPlaylist.id}/tracks`, {
@@ -303,7 +464,7 @@
                     });
                     const tracksData = await tracksRes.json();
                     renderTracks(tracksData.items);
-                    showStatus(`✅ Загружено ${tracksData.items.length} треков`, '');
+                    showStatus(`✅ Загружено ${tracksData.items.length} треков`, 'success');
                 } else {
                     showStatus('ℹ️ Нет плейлистов, используй поиск', '');
                 }
@@ -313,13 +474,21 @@
             }
         }
 
+        // =============================================
+        // 4. ОТРИСОВКА ТРЕКОВ
+        // =============================================
         function renderTracks(tracks) {
             if (!tracks || tracks.length === 0) {
-                resultsContainer.innerHTML = '<div class="no-results">😢 Нет треков</div>';
+                resultsContainer.innerHTML = `
+                    <div class="glass">
+                        <div class="empty-state">😢 Нет треков</div>
+                    </div>
+                `;
                 return;
             }
+
             let html = '<div class="results">';
-            tracks.slice(0, 8).forEach(item => {
+            tracks.slice(0, 10).forEach(item => {
                 const track = item.track;
                 if (!track) return;
                 const cover = track.album?.images?.[0]?.url || '';
@@ -327,8 +496,10 @@
                 html += `
                     <div class="result-card" onclick="playTrack('${track.id}')">
                         <div class="cover">${coverHtml}</div>
-                        <div class="title">${track.name}</div>
-                        <div class="artist">${track.artists.map(a => a.name).join(', ')}</div>
+                        <div class="info">
+                            <div class="title">${track.name}</div>
+                            <div class="artist">${track.artists.map(a => a.name).join(', ')}</div>
+                        </div>
                     </div>
                 `;
             });
@@ -336,16 +507,28 @@
             resultsContainer.innerHTML = html;
         }
 
+        // =============================================
+        // 5. ПОИСК
+        // =============================================
         searchBtn.addEventListener('click', async function() {
             const query = searchInput.value.trim();
-            if (!query) { alert('Напиши название трека!'); return; }
-            if (!accessToken) { alert('Сначала авторизуйся через Spotify!'); return; }
-            resultsContainer.innerHTML = '<div class="loading">⏳ Ищем...</div>';
+            if (!query) { 
+                resultsContainer.innerHTML = `<div class="glass"><div class="empty-state">Напиши название трека</div></div>`;
+                return; 
+            }
+            if (!accessToken) { 
+                resultsContainer.innerHTML = `<div class="glass"><div class="empty-state">Сначала войди в Spotify</div></div>`;
+                return; 
+            }
+
+            resultsContainer.innerHTML = `<div class="glass"><div class="loading">⏳ Ищем...</div></div>`;
+
             try {
                 const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`, {
                     headers: { 'Authorization': `Bearer ${accessToken}` }
                 });
                 const data = await response.json();
+
                 if (data.tracks && data.tracks.items && data.tracks.items.length > 0) {
                     let html = '<div class="results">';
                     data.tracks.items.forEach(track => {
@@ -354,19 +537,21 @@
                         html += `
                             <div class="result-card" onclick="playTrack('${track.id}')">
                                 <div class="cover">${coverHtml}</div>
-                                <div class="title">${track.name}</div>
-                                <div class="artist">${track.artists.map(a => a.name).join(', ')}</div>
+                                <div class="info">
+                                    <div class="title">${track.name}</div>
+                                    <div class="artist">${track.artists.map(a => a.name).join(', ')}</div>
+                                </div>
                             </div>
                         `;
                     });
                     html += '</div>';
                     resultsContainer.innerHTML = html;
                 } else {
-                    resultsContainer.innerHTML = '<div class="no-results">😢 Ничего не найдено</div>';
+                    resultsContainer.innerHTML = `<div class="glass"><div class="empty-state">😢 Ничего не найдено</div></div>`;
                 }
             } catch (error) {
                 console.error('Ошибка:', error);
-                resultsContainer.innerHTML = '<div class="no-results">❌ Ошибка поиска</div>';
+                resultsContainer.innerHTML = `<div class="glass"><div class="empty-state">❌ Ошибка поиска</div></div>`;
             }
         });
 
@@ -374,14 +559,20 @@
             if (e.key === 'Enter') searchBtn.click();
         });
 
+        // =============================================
+        // 6. ПЛЕЕР
+        // =============================================
         function playTrack(trackId) {
-            if (!trackId) { alert('Трек не найден'); return; }
+            if (!trackId) { 
+                resultsContainer.innerHTML = `<div class="glass"><div class="empty-state">❌ Трек не найден</div></div>`;
+                return; 
+            }
             playerFrame.src = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0&autoplay=1`;
             playerWrapper.style.display = 'block';
             playerWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        console.log('🩸 SWAG на Spotify!');
+        console.log('🩸 SWAG — стеклянный дизайн!');
     </script>
 
 </body>
