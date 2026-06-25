@@ -228,14 +228,12 @@
                 localStorage.setItem('spotify_token', accessToken);
                 window.history.replaceState({}, document.title, window.location.pathname);
                 updateStatus('✅ Авторизован', 'success');
-                loadUserPlaylists();
                 return true;
             }
             const savedToken = localStorage.getItem('spotify_token');
             if (savedToken) {
                 accessToken = savedToken;
                 updateStatus('✅ Авторизован (кеш)', 'success');
-                loadUserPlaylists();
                 return true;
             }
             updateStatus('🔑 Войди в Spotify', '');
@@ -246,40 +244,6 @@
             if (this.disabled) return;
             window.location.href = '/login';
         });
-
-        async function loadUserPlaylists() {
-            if (!accessToken) return;
-            try {
-                const response = await fetch('https://api.spotify.com/v1/me/playlists?limit=50', {
-                    headers: { 'Authorization': `Bearer ${accessToken}` }
-                });
-                const data = await response.json();
-                if (data.error && data.error.status === 401) {
-                    updateStatus('❌ Токен протух', 'error');
-                    localStorage.removeItem('spotify_token');
-                    loginBtn.disabled = false;
-                    loginBtn.textContent = 'Войти';
-                    loginBtn.classList.remove('green');
-                    return;
-                }
-                if (data.items && data.items.length > 0) {
-                    const firstPlaylist = data.items[0];
-                    const tracksRes = await fetch(`https://api.spotify.com/v1/playlists/${firstPlaylist.id}/tracks?limit=50`, {
-                        headers: { 'Authorization': `Bearer ${accessToken}` }
-                    });
-                    const tracksData = await tracksRes.json();
-                    const tracks = tracksData.items.map(item => item.track).filter(t => t);
-                    playlist = tracks;
-                    renderTracks(tracks);
-                    updateStatus(`✅ ${tracks.length} треков`, 'success');
-                } else {
-                    updateStatus('ℹ️ Нет плейлистов', '');
-                }
-            } catch (error) {
-                console.error('Ошибка:', error);
-                updateStatus('❌ Ошибка', 'error');
-            }
-        }
 
         async function searchMusic() {
             const query = searchInput.value.trim();
