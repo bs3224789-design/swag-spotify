@@ -19,7 +19,7 @@ let tokenExpirationTime = null;
 app.use(express.static('public'));
 
 // ==================================================
-// 1. ЛОГИН — С РАСШИРЕННЫМИ ПРАВАМИ!
+// 1. ЛОГИН
 // ==================================================
 app.get('/login', (req, res) => {
   const scopes = [
@@ -57,9 +57,10 @@ app.get('/callback', async (req, res) => {
     spotifyApi.setRefreshToken(refreshToken);
 
     console.log('✅ Авторизация успешна!');
+    console.log('🔑 Токен:', accessToken.substring(0, 30) + '...');
     res.redirect(`/?access_token=${accessToken}`);
   } catch (error) {
-    console.error('❌ Ошибка:', error);
+    console.error('❌ Ошибка авторизации:', error);
     res.status(500).send('Ошибка авторизации');
   }
 });
@@ -83,51 +84,86 @@ app.get('/api/token', async (req, res) => {
 
     return res.status(401).json({ error: 'Нет токена' });
   } catch (error) {
-    console.error('❌ Ошибка:', error);
+    console.error('❌ Ошибка токена:', error);
     res.status(500).json({ error: 'Ошибка сервера' });
   }
 });
 
 // ==================================================
-// 4. ПОИСК
+// 4. ПОИСК — С ПОДРОБНЫМИ ЛОГАМИ
 // ==================================================
 app.get('/api/search', async (req, res) => {
+  console.log('🔍 ===== НОВЫЙ ЗАПРОС ПОИСКА =====');
+  console.log('📝 Параметры запроса:', req.query);
+  
   const query = req.query.q;
   if (!query) {
+    console.log('❌ Нет параметра q');
     return res.status(400).json({ error: 'Нет запроса' });
   }
 
+  console.log('✅ Ищем трек:', query);
+
+  // Проверяем токен
+  console.log('🔑 Токен в памяти:', accessToken ? 'ЕСТЬ ✅' : 'НЕТ ❌');
+  console.log('⏰ Время истечения:', tokenExpirationTime ? new Date(tokenExpirationTime).toISOString() : 'НЕТ');
+  console.log('⏰ Текущее время:', new Date().toISOString());
+
   try {
+    // Если токен протух или его нет — пробуем обновить
     if (!accessToken || Date.now() > tokenExpirationTime) {
+      console.log('🔄 Токен протух или отсутствует, пробуем обновить...');
       if (refreshToken) {
+        console.log('🔄 Есть refreshToken, обновляем...');
         const data = await spotifyApi.refreshAccessToken();
         accessToken = data.body['access_token'];
         tokenExpirationTime = Date.now() + data.body['expires_in'] * 1000;
         spotifyApi.setAccessToken(accessToken);
+        console.log('✅ Токен обновлён!');
       } else {
+        console.log('❌ Нет refreshToken!');
         return res.status(401).json({ error: 'Нет токена' });
       }
     }
 
-    const response = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        }
+    // Формируем запрос к Spotify
+    const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`;
+    console.log('📡 Запрос к Spotify:', url);
+    console.log('🔑 Используем токен:', accessToken.substring(0, 30) + '...');
+
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
       }
-    );
+    });
+
+    console.log('📊 Статус ответа Spotify:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log('❌ Ошибка Spotify:', errorText);
+      return res.status(response.status).json({ 
+        error: `Ошибка Spotify: ${response.status}`,
+        details: errorText
+      });
+    }
 
     const data = await response.json();
-
-    if (data.error) {
-      return res.status(data.error.status || 500).json({ error: data.error.message });
+    console.log('✅ Найдено треков:', data.tracks?.items?.length || 0);
+    
+    if (data.tracks?.items?.length === 0) {
+      return res.json({ tracks: { items: [] } });
     }
 
     res.json(data);
   } catch (error) {
-    console.error('❌ Ошибка поиска:', error);
-    res.status(500).json({ error: 'Ошибка поиска' });
+    console.error('❌ КРИТИЧЕСКАЯ ОШИБКА ПОИСКА:', error);
+    console.error('📚 Стек ошибки:', error.stack);
+    res.status(500).json({ 
+      error: 'Ошибка поиска',
+      message: error.message,
+      stack: error.stack
+    });
   }
 });
 
