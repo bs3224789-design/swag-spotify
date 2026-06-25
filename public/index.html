@@ -274,7 +274,7 @@
                     updateStatus(`✅ ${tracks.length} треков`, 'success');
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
+                console.error('Ошибка загрузки плейлистов:', error);
             }
         }
 
@@ -291,6 +291,10 @@
             resultsContainer.innerHTML = `<div class="loading">⏳ Ищем...</div>`;
             try {
                 const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Ошибка ${response.status}: ${errorText}`);
+                }
                 const data = await response.json();
                 if (data.error) {
                     resultsContainer.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
@@ -303,8 +307,8 @@
                     resultsContainer.innerHTML = `<div class="empty-state">😢 Ничего не найдено</div>`;
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
-                resultsContainer.innerHTML = `<div class="empty-state">❌ Ошибка поиска</div>`;
+                console.error('Ошибка поиска:', error);
+                resultsContainer.innerHTML = `<div class="empty-state">❌ Ошибка поиска: ${error.message}</div>`;
             }
         }
 
