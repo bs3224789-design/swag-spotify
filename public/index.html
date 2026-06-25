@@ -194,7 +194,7 @@
 
     <script>
         // =============================================
-        // ПОЛНАЯ ЛОГИКА
+        // 1. ТОКЕН
         // =============================================
         const loginBtn = document.getElementById('loginBtn');
         const statusEl = document.getElementById('status');
@@ -207,27 +207,33 @@
         let accessToken = null;
         let playlist = [];
 
-        // =============================================
-        // 1. ТОКЕН
-        // =============================================
+        // Проверяем URL на наличие токена (после редиректа)
         const urlParams = new URLSearchParams(window.location.search);
         const tokenFromUrl = urlParams.get('access_token');
 
         if (tokenFromUrl) {
+            // Сохраняем токен
             accessToken = tokenFromUrl;
             localStorage.setItem('spotify_token', accessToken);
+            // Убираем токен из URL
             window.history.replaceState({}, document.title, window.location.pathname);
             updateStatus('✅ Авторизован', 'success');
             loadUserPlaylists();
         } else {
+            // Проверяем localStorage
             const savedToken = localStorage.getItem('spotify_token');
             if (savedToken) {
                 accessToken = savedToken;
-                updateStatus('✅ Авторизован', 'success');
+                updateStatus('✅ Авторизован (кеш)', 'success');
                 loadUserPlaylists();
+            } else {
+                updateStatus('🔑 Войди в Spotify', '');
             }
         }
 
+        // =============================================
+        // 2. СТАТУС
+        // =============================================
         function updateStatus(text, type = '') {
             statusEl.textContent = text;
             statusEl.className = 'status-text';
@@ -245,7 +251,7 @@
         }
 
         // =============================================
-        // 2. ВХОД
+        // 3. ВХОД
         // =============================================
         loginBtn.addEventListener('click', function() {
             if (this.disabled) return;
@@ -253,7 +259,7 @@
         });
 
         // =============================================
-        // 3. ПЛЕЙЛИСТЫ
+        // 4. ПЛЕЙЛИСТЫ
         // =============================================
         async function loadUserPlaylists() {
             if (!accessToken) return;
@@ -297,7 +303,7 @@
         }
 
         // =============================================
-        // 4. ПОИСК (ЧЕРЕЗ СЕРВЕР!)
+        // 5. ПОИСК
         // =============================================
         async function searchMusic() {
             const query = searchInput.value.trim();
@@ -314,7 +320,6 @@
             resultsContainer.innerHTML = `<div class="loading">⏳ Ищем...</div>`;
 
             try {
-                // Отправляем запрос на серверный эндпоинт
                 const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
 
@@ -345,7 +350,7 @@
         }
 
         // =============================================
-        // 5. ОТРИСОВКА
+        // 6. ОТРИСОВКА
         // =============================================
         function renderTracks(tracks) {
             if (!tracks || tracks.length === 0) {
@@ -373,7 +378,7 @@
         }
 
         // =============================================
-        // 6. ПЛЕЕР
+        // 7. ПЛЕЕР
         // =============================================
         function playTrack(index) {
             if (index < 0 || index >= playlist.length) return;
@@ -386,7 +391,7 @@
         }
 
         // =============================================
-        // 7. ОБРАБОТЧИКИ
+        // 8. ОБРАБОТЧИКИ
         // =============================================
         searchBtn.addEventListener('click', searchMusic);
         searchInput.addEventListener('keypress', function(e) {
@@ -394,7 +399,7 @@
         });
 
         // =============================================
-        // 8. АВТОПОИСК
+        // 9. АВТОПОИСК
         // =============================================
         setTimeout(() => {
             if (accessToken) {
@@ -403,6 +408,7 @@
         }, 1000);
 
         console.log('🩸 SWAG ЗАГРУЖЕН!');
+        console.log('🔑 Токен:', accessToken ? 'ЕСТЬ ✅' : 'НЕТ ❌');
     </script>
 
 </body>
