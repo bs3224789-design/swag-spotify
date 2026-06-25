@@ -6,9 +6,6 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ==================================================
-// НАСТРОЙКА SPOTIFY
-// ==================================================
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
@@ -19,9 +16,6 @@ let accessToken = null;
 let refreshToken = null;
 let tokenExpirationTime = null;
 
-// ==================================================
-// СТАТИКА
-// ==================================================
 app.use(express.static('public'));
 
 // ==================================================
@@ -32,14 +26,13 @@ app.get('/login', (req, res) => {
     'user-read-private',
     'user-read-email',
     'playlist-read-private',
-    'playlist-read-collaborative'
   ];
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes, 'state');
   res.redirect(authorizeURL);
 });
 
 // ==================================================
-// КОЛБЭК - ТУТ ВСЯ МАГИЯ
+// КОЛБЭК
 // ==================================================
 app.get('/callback', async (req, res) => {
   const code = req.query.code;
@@ -57,25 +50,21 @@ app.get('/callback', async (req, res) => {
     spotifyApi.setRefreshToken(refreshToken);
 
     console.log('✅ Авторизация успешна!');
-    console.log('🔑 Токен:', accessToken.substring(0, 20) + '...');
-
-    // РЕДИРЕКТ С ТОКЕНОМ В URL
     res.redirect(`/?access_token=${accessToken}`);
   } catch (error) {
-    console.error('❌ Ошибка авторизации:', error);
+    console.error('❌ Ошибка:', error);
     res.status(500).send('Ошибка авторизации');
   }
 });
 
 // ==================================================
-// API — ТОКЕН
+// ТОКЕН
 // ==================================================
 app.get('/api/token', async (req, res) => {
   try {
     if (accessToken && Date.now() < tokenExpirationTime) {
       return res.json({ accessToken });
     }
-
     if (refreshToken) {
       const data = await spotifyApi.refreshAccessToken();
       accessToken = data.body['access_token'];
@@ -83,22 +72,25 @@ app.get('/api/token', async (req, res) => {
       spotifyApi.setAccessToken(accessToken);
       return res.json({ accessToken });
     }
-
     return res.status(401).json({ error: 'Нет токена' });
   } catch (error) {
-    console.error('❌ Ошибка:', error);
     res.status(500).json({ error: 'Ошибка сервера' });
   }
 });
 
 // ==================================================
-// ПОИСК
+// ПОИСК (ИСПРАВЛЕН!)
 // ==================================================
 app.get('/api/search', async (req, res) => {
+  console.log('🔍 Получен запрос на поиск:', req.query);
+  
   const query = req.query.q;
   if (!query) {
+    console.log('❌ Пустой запрос');
     return res.status(400).json({ error: 'Нет запроса' });
   }
+
+  console.log('✅ Ищем трек:', query);
 
   try {
     if (!accessToken || Date.now() > tokenExpirationTime) {
@@ -124,9 +116,11 @@ app.get('/api/search', async (req, res) => {
     const data = await response.json();
 
     if (data.error) {
+      console.log('❌ Ошибка Spotify API:', data.error);
       return res.status(data.error.status || 500).json({ error: data.error.message });
     }
 
+    console.log('✅ Найдено треков:', data.tracks?.items?.length || 0);
     res.json(data);
   } catch (error) {
     console.error('❌ Ошибка поиска:', error);
@@ -141,9 +135,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ==================================================
-// ЗАПУСК
-// ==================================================
 app.listen(PORT, () => {
   console.log('');
   console.log('🩸 ========================================');
