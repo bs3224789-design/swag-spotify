@@ -19,7 +19,6 @@
             padding: 16px;
         }
 
-        /* ===== ЗВЁЗДЫ ===== */
         #starfield {
             position: fixed;
             top: 0;
@@ -38,9 +37,8 @@
             text-align: center;
         }
 
-        /* ===== ЗАГОЛОВОК ===== */
         .blood-title {
-            font-size: 64px;
+            font-size: 56px;
             font-weight: 900;
             letter-spacing: 8px;
             color: #cc0000;
@@ -50,41 +48,33 @@
         }
 
         .blood-sub {
-            font-size: 14px;
+            font-size: 13px;
             color: #883333;
             letter-spacing: 6px;
             font-family: 'Segoe UI', sans-serif;
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
-        /* ===== СТЕКЛЯННЫЕ КАРТОЧКИ ===== */
         .glass {
             background: rgba(255, 255, 255, 0.04);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 24px;
-            padding: 20px 24px;
-            margin-bottom: 16px;
+            border-radius: 20px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             transition: 0.3s;
         }
 
-        .glass:hover {
-            background: rgba(255, 255, 255, 0.07);
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        /* ===== КНОПКА ВХОДА ===== */
         .login-btn {
             background: rgba(29, 185, 84, 0.15);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(29, 185, 84, 0.3);
             border-radius: 60px;
-            padding: 16px 40px;
+            padding: 14px 32px;
             color: #1db954;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 700;
             cursor: pointer;
             transition: 0.3s;
@@ -103,23 +93,20 @@
             cursor: not-allowed;
         }
 
-        /* ===== СТАТУС ===== */
         .status {
-            font-size: 14px;
+            font-size: 13px;
             color: #883333;
             font-family: 'Segoe UI', sans-serif;
-            padding: 8px 0;
+            padding: 6px 0 0 0;
         }
 
         .status.success {
             color: #1db954;
         }
-
         .status.error {
             color: #cc0000;
         }
 
-        /* ===== ПОИСК ===== */
         .search-section {
             display: flex;
             gap: 10px;
@@ -128,15 +115,14 @@
 
         .search-section input {
             flex: 1;
-            min-width: 180px;
+            min-width: 160px;
             background: rgba(255, 255, 255, 0.04);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 60px;
-            padding: 14px 20px;
+            padding: 12px 18px;
             color: #fff;
-            font-size: 15px;
+            font-size: 14px;
             outline: none;
             font-family: 'Segoe UI', sans-serif;
             transition: 0.3s;
@@ -154,12 +140,11 @@
         .search-section button {
             background: rgba(200, 0, 0, 0.15);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(200, 0, 0, 0.25);
             border-radius: 60px;
-            padding: 14px 24px;
+            padding: 12px 20px;
             color: #cc6666;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 700;
             cursor: pointer;
             transition: 0.3s;
@@ -172,22 +157,192 @@
             box-shadow: 0 0 30px rgba(200, 0, 0, 0.1);
         }
 
+        /* ===== СЕЙЧАС ИГРАЕТ ===== */
+        #nowPlaying {
+            display: none;
+            flex-direction: row;
+            align-items: center;
+            gap: 16px;
+            text-align: left;
+        }
+
+        #nowPlaying .np-cover {
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            background: #1a0a0a;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        #nowPlaying .np-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #nowPlaying .np-info {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        #nowPlaying .np-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #nowPlaying .np-artist {
+            font-size: 14px;
+            color: #883333;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ===== КОНТРОЛЫ ПЛЕЕРА ===== */
+        .player-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 12px;
+        }
+
+        .player-controls button {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            color: #cc6666;
+            font-size: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .player-controls button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+        }
+
+        .player-controls .play-btn {
+            width: 56px;
+            height: 56px;
+            font-size: 24px;
+            background: rgba(200, 0, 0, 0.2);
+            border-color: rgba(200, 0, 0, 0.3);
+            color: #cc0000;
+        }
+
+        .player-controls .play-btn:hover {
+            background: rgba(200, 0, 0, 0.35);
+            border-color: rgba(200, 0, 0, 0.5);
+        }
+
+        /* ===== ГРОМКОСТЬ ===== */
+        .volume-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+
+        .volume-section .vol-icon {
+            font-size: 18px;
+            color: #663333;
+        }
+
+        .volume-section input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .volume-section input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #cc0000;
+            cursor: pointer;
+            border: none;
+        }
+
+        .volume-section input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #cc0000;
+            cursor: pointer;
+            border: none;
+        }
+
+        .volume-section .vol-value {
+            font-size: 13px;
+            color: #663333;
+            min-width: 36px;
+            text-align: right;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* ===== ЭКВАЛАЙЗЕР (визуализация) ===== */
+        .equalizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 36px;
+            margin-top: 10px;
+        }
+
+        .equalizer .bar {
+            width: 6px;
+            height: 8px;
+            background: rgba(200, 0, 0, 0.4);
+            border-radius: 3px;
+            transition: height 0.2s ease;
+        }
+
+        .equalizer .bar.active {
+            background: linear-gradient(180deg, #cc0000, #ff4444);
+            box-shadow: 0 0 12px rgba(200, 0, 0, 0.3);
+        }
+
         /* ===== РЕЗУЛЬТАТЫ ===== */
         .results {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 12px;
-            margin-top: 8px;
+            gap: 10px;
             width: 100%;
         }
 
         .result-card {
             background: rgba(255, 255, 255, 0.03);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 14px 18px;
+            border-radius: 14px;
+            padding: 12px 16px;
             cursor: pointer;
             transition: 0.3s;
             text-align: left;
@@ -203,16 +358,16 @@
         }
 
         .result-card .cover {
-            width: 52px;
-            height: 52px;
-            border-radius: 12px;
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
             background: #1a0a0a;
             overflow: hidden;
             flex-shrink: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
+            font-size: 22px;
         }
 
         .result-card .cover img {
@@ -227,7 +382,7 @@
         }
 
         .result-card .title {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             color: #fff;
             white-space: nowrap;
@@ -236,7 +391,7 @@
         }
 
         .result-card .artist {
-            font-size: 13px;
+            font-size: 12px;
             color: #883333;
             white-space: nowrap;
             overflow: hidden;
@@ -245,12 +400,10 @@
 
         /* ===== ПЛЕЕР ===== */
         .player-wrapper {
-            border-radius: 16px;
+            border-radius: 14px;
             overflow: hidden;
-            margin-top: 8px;
             background: rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
             display: none;
         }
@@ -258,41 +411,47 @@
         .player-wrapper iframe {
             display: block;
             width: 100%;
-            height: 352px;
+            height: 80px;
             border: none;
         }
 
-        /* ===== ТЕКСТОВЫЕ СОСТОЯНИЯ ===== */
         .loading {
             color: #663333;
             font-family: 'Segoe UI', sans-serif;
-            padding: 24px 0;
-            font-size: 15px;
+            padding: 20px 0;
+            font-size: 14px;
         }
 
         .no-results {
             color: #663333;
             font-family: 'Segoe UI', sans-serif;
-            padding: 24px 0;
-            font-size: 15px;
+            padding: 20px 0;
+            font-size: 14px;
         }
 
         .empty-state {
             color: #553333;
             font-family: 'Segoe UI', sans-serif;
-            padding: 16px 0;
-            font-size: 14px;
+            padding: 12px 0;
+            font-size: 13px;
         }
 
-        /* ===== АДАПТИВ ===== */
         @media (max-width: 480px) {
-            .blood-title { font-size: 44px; letter-spacing: 4px; }
-            .app { padding: 0; }
-            .glass { padding: 16px; }
-            .search-section input { min-width: 120px; }
-            .player-wrapper iframe { height: 220px; }
-            .result-card .cover { width: 44px; height: 44px; }
-            .result-card .title { font-size: 14px; }
+            .blood-title { font-size: 40px; letter-spacing: 4px; }
+            .glass { padding: 14px 16px; }
+            .search-section input { min-width: 120px; font-size: 13px; }
+            .search-section button { font-size: 13px; padding: 10px 16px; }
+            .result-card .cover { width: 40px; height: 40px; font-size: 18px; }
+            .result-card .title { font-size: 13px; }
+            .result-card .artist { font-size: 11px; }
+            #nowPlaying .np-cover { width: 52px; height: 52px; font-size: 22px; }
+            #nowPlaying .np-title { font-size: 15px; }
+            #nowPlaying .np-artist { font-size: 12px; }
+            .player-controls button { width: 38px; height: 38px; font-size: 16px; }
+            .player-controls .play-btn { width: 48px; height: 48px; font-size: 20px; }
+            .equalizer { height: 28px; }
+            .equalizer .bar { width: 4px; }
+            .player-wrapper iframe { height: 60px; }
         }
     </style>
 </head>
@@ -302,21 +461,63 @@
 
     <div class="app">
 
-        <!-- ЗАГОЛОВОК -->
         <div class="blood-title">SWAG</div>
         <div class="blood-sub">• только для своих</div>
 
-        <!-- КНОПКА ВХОДА + СТАТУС -->
         <div class="glass">
             <button class="login-btn" id="loginBtn">🔑 Войти через Spotify</button>
             <div class="status" id="status">Нажми на кнопку выше</div>
         </div>
 
-        <!-- ПОИСК -->
         <div class="glass">
             <div class="search-section">
                 <input type="text" id="searchInput" placeholder="Поиск треков..." value="The Weeknd Starboy">
                 <button id="searchBtn">Искать</button>
+            </div>
+        </div>
+
+        <!-- СЕЙЧАС ИГРАЕТ -->
+        <div class="glass" id="nowPlaying">
+            <div class="np-cover" id="npCover">🎵</div>
+            <div class="np-info">
+                <div class="np-title" id="npTitle">Выбери трек</div>
+                <div class="np-artist" id="npArtist">—</div>
+            </div>
+        </div>
+
+        <!-- КОНТРОЛЫ + ЭКВАЛАЙЗЕР -->
+        <div class="glass" id="playerControls" style="display:none;">
+            <div class="player-controls">
+                <button id="prevBtn" title="Предыдущий">⏮</button>
+                <button class="play-btn" id="playBtn" title="Play/Pause">▶</button>
+                <button id="nextBtn" title="Следующий">⏭</button>
+            </div>
+
+            <!-- ЭКВАЛАЙЗЕР -->
+            <div class="equalizer" id="equalizer">
+                <div class="bar" id="bar0"></div>
+                <div class="bar" id="bar1"></div>
+                <div class="bar" id="bar2"></div>
+                <div class="bar" id="bar3"></div>
+                <div class="bar" id="bar4"></div>
+                <div class="bar" id="bar5"></div>
+                <div class="bar" id="bar6"></div>
+                <div class="bar" id="bar7"></div>
+                <div class="bar" id="bar8"></div>
+                <div class="bar" id="bar9"></div>
+                <div class="bar" id="bar10"></div>
+                <div class="bar" id="bar11"></div>
+                <div class="bar" id="bar12"></div>
+                <div class="bar" id="bar13"></div>
+                <div class="bar" id="bar14"></div>
+                <div class="bar" id="bar15"></div>
+            </div>
+
+            <!-- ГРОМКОСТЬ -->
+            <div class="volume-section">
+                <span class="vol-icon">🔊</span>
+                <input type="range" id="volumeSlider" min="0" max="100" value="80">
+                <span class="vol-value" id="volumeValue">80%</span>
             </div>
         </div>
 
@@ -399,9 +600,50 @@
         const resultsContainer = document.getElementById('resultsContainer');
         const playerWrapper = document.getElementById('playerWrapper');
         const playerFrame = document.getElementById('playerFrame');
+        const nowPlaying = document.getElementById('nowPlaying');
+        const npCover = document.getElementById('npCover');
+        const npTitle = document.getElementById('npTitle');
+        const npArtist = document.getElementById('npArtist');
+        const playerControls = document.getElementById('playerControls');
+        const playBtn = document.getElementById('playBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeValue = document.getElementById('volumeValue');
 
         let accessToken = null;
+        let currentTrackId = null;
+        let playlist = [];
+        let currentIndex = -1;
+        let isPlaying = false;
 
+        // ===== ЭКВАЛАЙЗЕР =====
+        const bars = document.querySelectorAll('.bar');
+        let eqInterval = null;
+
+        function startEqualizer() {
+            if (eqInterval) return;
+            eqInterval = setInterval(() => {
+                bars.forEach(bar => {
+                    const height = Math.random() * 30 + 6;
+                    bar.style.height = height + 'px';
+                    bar.classList.add('active');
+                });
+            }, 150);
+        }
+
+        function stopEqualizer() {
+            if (eqInterval) {
+                clearInterval(eqInterval);
+                eqInterval = null;
+            }
+            bars.forEach(bar => {
+                bar.style.height = '8px';
+                bar.classList.remove('active');
+            });
+        }
+
+        // ===== ТОКЕН =====
         const urlParams = new URLSearchParams(window.location.search);
         const tokenFromUrl = urlParams.get('access_token');
 
@@ -463,8 +705,10 @@
                         headers: { 'Authorization': `Bearer ${accessToken}` }
                     });
                     const tracksData = await tracksRes.json();
-                    renderTracks(tracksData.items);
-                    showStatus(`✅ Загружено ${tracksData.items.length} треков`, 'success');
+                    const tracks = tracksData.items.map(item => item.track).filter(t => t);
+                    playlist = tracks;
+                    renderTracks(tracks);
+                    showStatus(`✅ Загружено ${tracks.length} треков`, 'success');
                 } else {
                     showStatus('ℹ️ Нет плейлистов, используй поиск', '');
                 }
@@ -488,13 +732,11 @@
             }
 
             let html = '<div class="results">';
-            tracks.slice(0, 10).forEach(item => {
-                const track = item.track;
-                if (!track) return;
+            tracks.slice(0, 10).forEach((track, index) => {
                 const cover = track.album?.images?.[0]?.url || '';
                 const coverHtml = cover ? `<img src="${cover}">` : '🎵';
                 html += `
-                    <div class="result-card" onclick="playTrack('${track.id}')">
+                    <div class="result-card" onclick="playTrack(${index})" data-index="${index}">
                         <div class="cover">${coverHtml}</div>
                         <div class="info">
                             <div class="title">${track.name}</div>
@@ -512,13 +754,13 @@
         // =============================================
         searchBtn.addEventListener('click', async function() {
             const query = searchInput.value.trim();
-            if (!query) { 
+            if (!query) {
                 resultsContainer.innerHTML = `<div class="glass"><div class="empty-state">Напиши название трека</div></div>`;
-                return; 
+                return;
             }
-            if (!accessToken) { 
+            if (!accessToken) {
                 resultsContainer.innerHTML = `<div class="glass"><div class="empty-state">Сначала войди в Spotify</div></div>`;
-                return; 
+                return;
             }
 
             resultsContainer.innerHTML = `<div class="glass"><div class="loading">⏳ Ищем...</div></div>`;
@@ -530,22 +772,8 @@
                 const data = await response.json();
 
                 if (data.tracks && data.tracks.items && data.tracks.items.length > 0) {
-                    let html = '<div class="results">';
-                    data.tracks.items.forEach(track => {
-                        const cover = track.album?.images?.[0]?.url || '';
-                        const coverHtml = cover ? `<img src="${cover}">` : '🎵';
-                        html += `
-                            <div class="result-card" onclick="playTrack('${track.id}')">
-                                <div class="cover">${coverHtml}</div>
-                                <div class="info">
-                                    <div class="title">${track.name}</div>
-                                    <div class="artist">${track.artists.map(a => a.name).join(', ')}</div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    html += '</div>';
-                    resultsContainer.innerHTML = html;
+                    playlist = data.tracks.items;
+                    renderTracks(playlist);
                 } else {
                     resultsContainer.innerHTML = `<div class="glass"><div class="empty-state">😢 Ничего не найдено</div></div>`;
                 }
@@ -562,17 +790,88 @@
         // =============================================
         // 6. ПЛЕЕР
         // =============================================
-        function playTrack(trackId) {
-            if (!trackId) { 
-                resultsContainer.innerHTML = `<div class="glass"><div class="empty-state">❌ Трек не найден</div></div>`;
-                return; 
-            }
-            playerFrame.src = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0&autoplay=1`;
+        function playTrack(index) {
+            if (index < 0 || index >= playlist.length) return;
+            currentIndex = index;
+            const track = playlist[currentIndex];
+            if (!track) return;
+
+            currentTrackId = track.id;
+
+            // Обновляем "Сейчас играет"
+            const cover = track.album?.images?.[0]?.url || '';
+            npCover.innerHTML = cover ? `<img src="${cover}">` : '🎵';
+            npTitle.textContent = track.name;
+            npArtist.textContent = track.artists.map(a => a.name).join(', ');
+            nowPlaying.style.display = 'flex';
+            playerControls.style.display = 'block';
+
+            // Встраиваем плеер
+            playerFrame.src = `https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0&autoplay=1`;
             playerWrapper.style.display = 'block';
+            isPlaying = true;
+            playBtn.textContent = '⏸';
+            startEqualizer();
+
+            // Подсветка активного трека
+            document.querySelectorAll('.result-card').forEach((el, i) => {
+                el.style.borderColor = i === index ? 'rgba(200,0,0,0.5)' : 'rgba(255,255,255,0.05)';
+            });
+
             playerWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        console.log('🩸 SWAG — стеклянный дизайн!');
+        // ===== ПЕРЕКЛЮЧЕНИЕ ТРЕКОВ =====
+        prevBtn.addEventListener('click', function() {
+            if (playlist.length === 0) return;
+            const newIndex = (currentIndex - 1 + playlist.length) % playlist.length;
+            playTrack(newIndex);
+        });
+
+        nextBtn.addEventListener('click', function() {
+            if (playlist.length === 0) return;
+            const newIndex = (currentIndex + 1) % playlist.length;
+            playTrack(newIndex);
+        });
+
+        // ===== PLAY/PAUSE =====
+        playBtn.addEventListener('click', function() {
+            if (!currentTrackId) {
+                if (playlist.length > 0) {
+                    playTrack(0);
+                }
+                return;
+            }
+
+            isPlaying = !isPlaying;
+            this.textContent = isPlaying ? '⏸' : '▶';
+
+            if (isPlaying) {
+                playerFrame.src = `https://open.spotify.com/embed/track/${currentTrackId}?utm_source=generator&theme=0&autoplay=1`;
+                startEqualizer();
+            } else {
+                playerFrame.src = `https://open.spotify.com/embed/track/${currentTrackId}?utm_source=generator&theme=0&autoplay=0`;
+                stopEqualizer();
+            }
+        });
+
+        // ===== ГРОМКОСТЬ =====
+        volumeSlider.addEventListener('input', function() {
+            const val = this.value;
+            volumeValue.textContent = val + '%';
+            // Реальная громкость контролируется через iframe, но мы сохраняем значение
+            try {
+                const iframe = document.querySelector('#playerFrame');
+                // Для Spotify Embed громкость контролируется через настройки плеера
+                // Мы просто показываем значение
+            } catch(e) {}
+        });
+
+        // =============================================
+        // 7. ЗАПУСК
+        // =============================================
+        console.log('🩸 SWAG с эквалайзером!');
+        console.log('🎵 Войди через Spotify и ищи музыку');
     </script>
 
 </body>
