@@ -26,26 +26,7 @@
         }
         .logo { font-size: 28px; font-weight: 900; letter-spacing: 4px; color: #fff; font-family: 'Impact', sans-serif; }
         .logo span { color: #cc0000; }
-        .header-right { display: flex; align-items: center; gap: 16px; }
-        .login-btn {
-            background: rgba(255,255,255,0.08);
-            border: none;
-            border-radius: 40px;
-            padding: 10px 24px;
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-            font-family: 'Segoe UI', sans-serif;
-        }
-        .login-btn:hover { background: rgba(255,255,255,0.15); }
-        .login-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-        .login-btn.green { background: #1db954; color: #000; }
-        .login-btn.green:hover { background: #1ed760; }
         .status-text { font-size: 13px; color: #666; font-weight: 400; }
-        .status-text.success { color: #1db954; }
-        .status-text.error { color: #cc0000; }
 
         .search-section {
             margin: 24px 0 20px 0;
@@ -156,7 +137,6 @@
 
         @media (max-width: 600px) {
             .header { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .header-right { width: 100%; justify-content: space-between; }
             .logo { font-size: 22px; }
             .results { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
             .search-section { flex-wrap: wrap; }
@@ -172,9 +152,7 @@
 
     <div class="header">
         <div class="logo"><span>SWAG</span></div>
-        <div class="header-right">
-            <span class="status-text" id="status">🎵 Добро пожаловать</span>
-        </div>
+        <span class="status-text" id="status">🎵 Введи трек</span>
     </div>
 
     <div class="search-section">
@@ -184,7 +162,7 @@
 
     <div class="section-title">Результаты</div>
     <div id="resultsContainer">
-        <div class="empty-state">Введи название и нажми "Найти"</div>
+        <div class="empty-state">Напиши название и нажми "Найти"</div>
     </div>
 
     <div class="player-wrapper" id="playerWrapper">
@@ -192,77 +170,140 @@
     </div>
 
     <script>
-        // =============================================
-        // ДЕМО-ТРЕКИ (работает без Spotify API!)
-        // =============================================
         const searchInput = document.getElementById('searchInput');
         const searchBtn = document.getElementById('searchBtn');
         const resultsContainer = document.getElementById('resultsContainer');
         const playerWrapper = document.getElementById('playerWrapper');
         const playerFrame = document.getElementById('playerFrame');
 
-        // БАЗА ДЕМО-ТРЕКОВ (можно добавить любые)
-        const DEMO_TRACKS = [
-            { id: '7wtfhZwyrcc', name: 'Believer', artist: 'Imagine Dragons', cover: '' },
-            { id: 'JGwWNGJdvx8', name: 'Shape of You', artist: 'Ed Sheeran', cover: '' },
-            { id: 'fHI8X4OXluQ', name: 'Blinding Lights', artist: 'The Weeknd', cover: '' },
-            { id: '34Na4j8JIs', name: 'Starboy', artist: 'The Weeknd', cover: '' },
-            { id: 'D71lFSY9A', name: 'Bad Guy', artist: 'Billie Eilish', cover: '' },
-            { id: 'mzB1VGEGcSU', name: 'Lucid Dreams', artist: 'Juice WRLD', cover: '' },
-            { id: '0Ql9ZrJk1gAlYJjBZvP1g', name: 'SAD!', artist: 'XXXTENTACION', cover: '' },
-            { id: '6b8BQ1fR0Gf3GjL1mUv6Rk', name: 'Bohemian Rhapsody', artist: 'Queen', cover: '' }
-        ];
+        let currentPlaylist = [];
 
-        function searchMusic() {
-            const query = searchInput.value.trim().toLowerCase();
+        // =============================================
+        // ПОИСК НА YOUTUBE (бесплатно, без токенов)
+        // =============================================
+        async function searchMusic() {
+            const query = searchInput.value.trim();
             if (!query) {
                 resultsContainer.innerHTML = `<div class="empty-state">Напиши название трека</div>`;
                 return;
             }
 
-            // Фильтруем треки по запросу
-            const filtered = DEMO_TRACKS.filter(track => 
-                track.name.toLowerCase().includes(query) || 
-                track.artist.toLowerCase().includes(query)
-            );
+            resultsContainer.innerHTML = `<div class="loading">⏳ Ищем "${query}"...</div>`;
 
-            if (filtered.length === 0) {
-                resultsContainer.innerHTML = `<div class="empty-state">😢 Ничего не найдено. Попробуй: "The Weeknd" или "Imagine Dragons"</div>`;
-                return;
+            try {
+                // Используем публичный Invidious API (без ключей)
+                const response = await fetch(
+                    `https://invidious.jing.ro/api/v1/search?q=${encodeURIComponent(query + ' official audio')}&type=video&hl=en`
+                );
+
+                if (!response.ok) throw new Error('Ошибка поиска');
+
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    currentPlaylist = data;
+                    renderResults(data);
+                } else {
+                    resultsContainer.innerHTML = `<div class="empty-state">😢 Ничего не найдено. Попробуй другое название.</div>`;
+                }
+            } catch (error) {
+                console.error('Ошибка:', error);
+                // Резервный сервер
+                try {
+                    const response2 = await fetch(
+                        `https://invidious.snopyta.org/api/v1/search?q=${encodeURIComponent(query + ' official audio')}&type=video&hl=en`
+                    );
+                    if (response2.ok) {
+                        const data2 = await response2.json();
+                        if (data2 && data2.length > 0) {
+                            currentPlaylist = data2;
+                            renderResults(data2);
+                            return;
+                        }
+                    }
+                } catch (e2) {
+                    console.error('Резервный поиск не работает:', e2);
+                }
+                // Демо-режим
+                showDemoResults(query);
             }
-
-            renderTracks(filtered);
         }
 
-        function renderTracks(tracks) {
+        // =============================================
+        // ДЕМО-РЕЖИМ (если API не работает)
+        // =============================================
+        function showDemoResults(query) {
+            const demos = [
+                { title: query || 'Believer', author: 'Imagine Dragons', videoId: '7wtfhZwyrcc' },
+                { title: 'Shape of You', author: 'Ed Sheeran', videoId: 'JGwWNGJdvx8' },
+                { title: 'Blinding Lights', author: 'The Weeknd', videoId: 'fHI8X4OXluQ' },
+                { title: 'Starboy', author: 'The Weeknd', videoId: '34Na4j8JIs' },
+                { title: 'Bad Guy', author: 'Billie Eilish', videoId: 'D71lFSY9A' },
+                { title: 'Lucid Dreams', author: 'Juice WRLD', videoId: 'mzB1VGEGcSU' }
+            ];
+
+            resultsContainer.innerHTML = `
+                <div style="text-align:center;color:#666;font-size:13px;padding:10px;font-family:'Segoe UI',sans-serif;">
+                    ⚠️ Демо-режим (YouTube API временно недоступен)
+                </div>
+            `;
+            renderResults(demos);
+        }
+
+        // =============================================
+        // ОТРИСОВКА КАРТОЧЕК
+        // =============================================
+        function renderResults(videos) {
             let html = '<div class="results">';
-            tracks.forEach((track) => {
-                const coverHtml = track.cover ? `<img src="${track.cover}">` : '<div class="empty-cover">🎵</div>';
+            const items = videos.slice(0, 8);
+
+            items.forEach((video) => {
+                const title = video.title || 'Без названия';
+                const author = video.author || 'Неизвестен';
+                const videoId = video.videoId || video.id;
+
+                let cover = '';
+                if (video.videoThumbnails && video.videoThumbnails.length > 0) {
+                    const thumbs = video.videoThumbnails;
+                    cover = thumbs[Math.floor(thumbs.length / 2)]?.url || thumbs[0]?.url || '';
+                }
+                if (!cover && video.thumbnail) {
+                    cover = video.thumbnail;
+                }
+
                 html += `
-                    <div class="result-card" onclick="playTrack('${track.id}', '${track.name}', '${track.artist}')">
+                    <div class="result-card" onclick="playTrack('${videoId}')">
                         <div class="cover">
-                            ${coverHtml}
+                            ${cover ? `<img src="${cover}" alt="${title}">` : `<div class="empty-cover">🎵</div>`}
                             <div class="play-overlay">▶</div>
                         </div>
-                        <div class="title">${track.name}</div>
-                        <div class="artist">${track.artist}</div>
+                        <div class="title">${title}</div>
+                        <div class="artist">${author}</div>
                     </div>
                 `;
             });
+
             html += '</div>';
             resultsContainer.innerHTML = html;
         }
 
-        function playTrack(trackId, title, artist) {
-            if (!trackId) {
+        // =============================================
+        // ПЛЕЕР
+        // =============================================
+        function playTrack(videoId) {
+            if (!videoId) {
                 alert('Трек не найден');
                 return;
             }
-            playerFrame.src = `https://open.spotify.com/embed/track/${trackId}?utm_source=generator&theme=0&autoplay=1`;
+
+            playerFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&rel=0&modestbranding=1`;
             playerWrapper.style.display = 'block';
             playerWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
+        // =============================================
+        // ОБРАБОТЧИКИ
+        // =============================================
         searchBtn.addEventListener('click', searchMusic);
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') searchMusic();
@@ -271,8 +312,8 @@
         // Автопоиск при загрузке
         setTimeout(searchMusic, 500);
 
-        console.log('🩸 SWAG (ДЕМО-РЕЖИМ) ЗАГРУЖЕН!');
-        console.log('🎵 Ищет по базе демо-треков (без Spotify API)');
+        console.log('🩸 SWAG (YouTube) ЗАГРУЖЕН!');
+        console.log('🎵 Ищем через YouTube (бесплатно!)');
     </script>
 
 </body>
