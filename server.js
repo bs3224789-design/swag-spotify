@@ -6,6 +6,9 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// ==================================================
+// НАСТРОЙКА SPOTIFY (берёт данные из переменных)
+// ==================================================
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.CLIENT_ID,
   clientSecret: process.env.CLIENT_SECRET,
@@ -16,6 +19,9 @@ let accessToken = null;
 let refreshToken = null;
 let tokenExpirationTime = null;
 
+// ==================================================
+// СТАТИКА
+// ==================================================
 app.use(express.static('public'));
 
 // ==================================================
@@ -26,9 +32,7 @@ app.get('/login', (req, res) => {
     'user-read-private',
     'user-read-email',
     'playlist-read-private',
-    'playlist-read-collaborative',
-    'user-library-read',
-    'user-top-read'
+    'playlist-read-collaborative'
   ];
   const authorizeURL = spotifyApi.createAuthorizeURL(scopes, 'state');
   res.redirect(authorizeURL);
@@ -55,7 +59,7 @@ app.get('/callback', async (req, res) => {
     console.log('✅ Авторизация успешна!');
     res.redirect(`/?access_token=${accessToken}`);
   } catch (error) {
-    console.error('❌ Ошибка:', error);
+    console.error('❌ Ошибка авторизации:', error);
     res.status(500).send('Ошибка авторизации');
   }
 });
@@ -68,6 +72,7 @@ app.get('/api/token', async (req, res) => {
     if (accessToken && Date.now() < tokenExpirationTime) {
       return res.json({ accessToken });
     }
+
     if (refreshToken) {
       const data = await spotifyApi.refreshAccessToken();
       accessToken = data.body['access_token'];
@@ -75,8 +80,10 @@ app.get('/api/token', async (req, res) => {
       spotifyApi.setAccessToken(accessToken);
       return res.json({ accessToken });
     }
+
     return res.status(401).json({ error: 'Нет токена' });
   } catch (error) {
+    console.error('❌ Ошибка:', error);
     res.status(500).json({ error: 'Ошибка сервера' });
   }
 });
@@ -131,6 +138,9 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// ==================================================
+// 6. ЗАПУСК
+// ==================================================
 app.listen(PORT, () => {
   console.log('');
   console.log('🩸 ========================================');
