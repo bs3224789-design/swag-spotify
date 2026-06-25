@@ -79,9 +79,6 @@ app.get('/api/token', async (req, res) => {
   }
 });
 
-// =============================================
-// ГЛАВНОЕ: ПОИСК С LIMIT В URL
-// =============================================
 app.get('/api/search', async (req, res) => {
   const query = req.query.q;
   if (!query) {
@@ -102,7 +99,6 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
-    // ПРАВИЛЬНЫЙ ЗАПРОС: limit=20 В URL
     const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=20`;
     console.log('📡 Запрос к Spotify:', url);
 
