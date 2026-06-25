@@ -245,6 +245,9 @@
             window.location.href = '/login';
         });
 
+        // =============================================
+        // ПОИСК ЧЕРЕЗ POST (НОВОЕ API SPOTIFY)
+        // =============================================
         async function searchMusic() {
             const query = searchInput.value.trim();
             if (!query) {
@@ -257,7 +260,13 @@
             }
             resultsContainer.innerHTML = `<div class="loading">⏳ Ищем...</div>`;
             try {
-                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                const response = await fetch(`/api/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ q: query })
+                });
                 const data = await response.json();
                 if (data.error) {
                     resultsContainer.innerHTML = `<div class="empty-state">❌ ${data.error}</div>`;
