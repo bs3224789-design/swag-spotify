@@ -194,7 +194,7 @@
 
     <script>
         // =============================================
-        // 1. ЭЛЕМЕНТЫ
+        // ЭЛЕМЕНТЫ
         // =============================================
         const loginBtn = document.getElementById('loginBtn');
         const statusEl = document.getElementById('status');
@@ -208,7 +208,7 @@
         let playlist = [];
 
         // =============================================
-        // 2. ФУНКЦИЯ ОБНОВЛЕНИЯ СТАТУСА
+        // СТАТУС
         // =============================================
         function updateStatus(text, type = '') {
             statusEl.textContent = text;
@@ -228,10 +228,9 @@
         }
 
         // =============================================
-        // 3. ПОЛУЧЕНИЕ ТОКЕНА (ГЛАВНАЯ ФУНКЦИЯ!)
+        // ТОКЕН
         // =============================================
         function getToken() {
-            // Сначала пробуем взять из URL (после редиректа с /callback)
             const urlParams = new URLSearchParams(window.location.search);
             const tokenFromUrl = urlParams.get('access_token');
             
@@ -239,14 +238,12 @@
                 console.log('🔑 Токен найден в URL!');
                 accessToken = tokenFromUrl;
                 localStorage.setItem('spotify_token', accessToken);
-                // Убираем токен из URL, чтобы не светился
                 window.history.replaceState({}, document.title, window.location.pathname);
                 updateStatus('✅ Авторизован', 'success');
                 loadUserPlaylists();
                 return true;
             }
             
-            // Если в URL нет — пробуем взять из localStorage
             const savedToken = localStorage.getItem('spotify_token');
             if (savedToken) {
                 console.log('🔑 Токен найден в localStorage!');
@@ -262,7 +259,15 @@
         }
 
         // =============================================
-        // 4. ЗАГРУЗКА ПЛЕЙЛИСТОВ
+        // ВХОД
+        // =============================================
+        loginBtn.addEventListener('click', function() {
+            if (this.disabled) return;
+            window.location.href = '/login';
+        });
+
+        // =============================================
+        // ПЛЕЙЛИСТЫ
         // =============================================
         async function loadUserPlaylists() {
             if (!accessToken) return;
@@ -306,7 +311,7 @@
         }
 
         // =============================================
-        // 5. ПОИСК
+        // ПОИСК
         // =============================================
         async function searchMusic() {
             const query = searchInput.value.trim();
@@ -323,8 +328,13 @@
             resultsContainer.innerHTML = `<div class="loading">⏳ Ищем...</div>`;
 
             try {
-                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                const url = `/api/search?q=${encodeURIComponent(query)}`;
+                console.log('🔍 Отправляем запрос:', url);
+                
+                const response = await fetch(url);
                 const data = await response.json();
+
+                console.log('📦 Ответ сервера:', data);
 
                 if (data.error) {
                     if (data.error === 'Нет токена') {
@@ -347,13 +357,13 @@
                     resultsContainer.innerHTML = `<div class="empty-state">😢 Ничего не найдено</div>`;
                 }
             } catch (error) {
-                console.error('Ошибка:', error);
+                console.error('❌ Ошибка поиска:', error);
                 resultsContainer.innerHTML = `<div class="empty-state">❌ Ошибка поиска</div>`;
             }
         }
 
         // =============================================
-        // 6. ОТРИСОВКА
+        // ОТРИСОВКА
         // =============================================
         function renderTracks(tracks) {
             if (!tracks || tracks.length === 0) {
@@ -381,7 +391,7 @@
         }
 
         // =============================================
-        // 7. ПЛЕЕР
+        // ПЛЕЕР
         // =============================================
         function playTrack(index) {
             if (index < 0 || index >= playlist.length) return;
@@ -394,25 +404,18 @@
         }
 
         // =============================================
-        // 8. ОБРАБОТЧИКИ
+        // ОБРАБОТЧИКИ
         // =============================================
-        loginBtn.addEventListener('click', function() {
-            if (this.disabled) return;
-            window.location.href = '/login';
-        });
-
         searchBtn.addEventListener('click', searchMusic);
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') searchMusic();
         });
 
         // =============================================
-        // 9. ЗАПУСК (автоматический поиск если есть токен)
+        // ЗАПУСК
         // =============================================
-        // Сначала получаем токен
         const hasToken = getToken();
         
-        // Если токен есть — делаем поиск через 1 секунду
         if (hasToken) {
             setTimeout(() => {
                 searchMusic();
@@ -421,7 +424,6 @@
 
         console.log('🩸 SWAG ЗАГРУЖЕН!');
         console.log('🔑 Токен:', accessToken ? 'ЕСТЬ ✅' : 'НЕТ ❌');
-        console.log('📍 URL:', window.location.href);
     </script>
 
 </body>
